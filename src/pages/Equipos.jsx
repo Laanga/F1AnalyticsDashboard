@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { getDrivers } from '../services/openf1Service';
+import { getDrivers, getCurrentYear } from '../services/openf1Service';
 import Loader from '../components/Loader';
 import GraficaPuntos from '../components/GraficaPuntos';
 import { Shield, Users, TrendingUp } from 'lucide-react';
@@ -11,6 +11,7 @@ import { Shield, Users, TrendingUp } from 'lucide-react';
 const Equipos = () => {
   const [equipos, setEquipos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const currentYear = getCurrentYear();
 
   useEffect(() => {
     const cargarEquipos = async () => {
@@ -69,7 +70,7 @@ const Equipos = () => {
       >
         <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
           Equipos
-          <span className="text-f1-red font-bold ml-3">F1</span>
+          <span className="text-f1-red font-bold ml-3">{currentYear}</span>
         </h1>
         <p className="text-white/60 text-lg">
           Análisis de constructores y sus pilotos

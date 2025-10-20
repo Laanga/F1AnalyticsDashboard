@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getDrivers } from '../services/openf1Service';
+import { getDrivers, getCurrentYear } from '../services/openf1Service';
 import CardPiloto from '../components/CardPiloto';
 import Loader from '../components/Loader';
-import GraficaPuntos from '../components/GraficaPuntos';
-import { X, TrendingUp } from 'lucide-react';
+import { X, User, Flag, Hash, Shield, Info } from 'lucide-react';
 
 /**
  * Página de Pilotos - Muestra todos los pilotos con sus detalles
@@ -14,6 +13,7 @@ const Pilotos = () => {
   const [loading, setLoading] = useState(true);
   const [pilotoSeleccionado, setPilotoSeleccionado] = useState(null);
   const [modalAbierto, setModalAbierto] = useState(false);
+  const currentYear = getCurrentYear();
 
   // Cargar pilotos al montar el componente
   useEffect(() => {
@@ -44,15 +44,6 @@ const Pilotos = () => {
     setTimeout(() => setPilotoSeleccionado(null), 300);
   };
 
-  // Datos de ejemplo para la gráfica (en una implementación real, estos vendrían de la API)
-  const datosGraficaEjemplo = [
-    { name: 'Carrera 1', value: 25 },
-    { name: 'Carrera 2', value: 18 },
-    { name: 'Carrera 3', value: 25 },
-    { name: 'Carrera 4', value: 15 },
-    { name: 'Carrera 5', value: 25 },
-  ];
-
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -71,10 +62,10 @@ const Pilotos = () => {
       >
         <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
           Pilotos
-          <span className="text-f1-red font-bold ml-3">2024</span>
+          <span className="text-f1-red font-bold ml-3">{currentYear}</span>
         </h1>
         <p className="text-white/60 text-lg">
-          Explora el rendimiento de cada piloto de la temporada actual
+          {pilotos.length} pilotos activos en la temporada {currentYear}
         </p>
       </motion.div>
 
@@ -120,22 +111,64 @@ const Pilotos = () => {
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               className="fixed inset-0 z-50 flex items-center justify-center p-4"
             >
-              <div className="glass rounded-3xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="glass rounded-3xl p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
                 {/* Header del modal */}
-                <div className="flex items-start justify-between mb-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-20 h-20 rounded-2xl bg-gradient-f1 flex items-center justify-center shadow-lg shadow-f1-red/30">
-                      <span className="text-4xl font-bold text-white">
-                        {pilotoSeleccionado.driver_number}
-                      </span>
-                    </div>
-                    <div>
-                      <h2 className="text-3xl font-bold text-white">
+                <div className="flex items-start justify-between mb-8">
+                  <div className="flex items-start space-x-6">
+                    {/* Foto grande del piloto */}
+                    {pilotoSeleccionado.headshot_url ? (
+                      <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="w-32 h-32 rounded-2xl overflow-hidden bg-gradient-f1 shadow-2xl shadow-f1-red/30 flex-shrink-0"
+                      >
+                        <img 
+                          src={pilotoSeleccionado.headshot_url} 
+                          alt={pilotoSeleccionado.full_name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextElementSibling.style.display = 'flex';
+                          }}
+                        />
+                        <div 
+                          className="w-full h-full bg-gradient-f1 items-center justify-center hidden"
+                          style={{ display: 'none' }}
+                        >
+                          <span className="text-5xl font-bold text-white">
+                            {pilotoSeleccionado.driver_number}
+                          </span>
+                        </div>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="w-32 h-32 rounded-2xl bg-gradient-f1 flex items-center justify-center shadow-2xl shadow-f1-red/30 flex-shrink-0"
+                      >
+                        <span className="text-5xl font-bold text-white">
+                          {pilotoSeleccionado.driver_number}
+                        </span>
+                      </motion.div>
+                    )}
+
+                    <div className="flex-1">
+                      <motion.h2 
+                        initial={{ x: -20, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ delay: 0.1 }}
+                        className="text-4xl font-bold text-white mb-2"
+                      >
                         {pilotoSeleccionado.full_name}
-                      </h2>
-                      <p className="text-white/60">
+                      </motion.h2>
+                      <motion.p 
+                        initial={{ x: -20, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                        className="text-white/60 text-lg"
+                      >
                         {pilotoSeleccionado.team_name || 'Equipo no disponible'}
-                      </p>
+                      </motion.p>
                     </div>
                   </div>
 
@@ -144,59 +177,108 @@ const Pilotos = () => {
                     whileHover={{ scale: 1.1, rotate: 90 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={handleCerrarModal}
-                    className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                    className="w-12 h-12 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors flex-shrink-0"
                     aria-label="Cerrar modal"
                   >
                     <X className="w-6 h-6 text-white" />
                   </motion.button>
                 </div>
 
-                {/* Información adicional */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                {/* Información del piloto */}
+                <motion.div
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6"
+                >
                   <div className="glass-dark rounded-xl p-4">
-                    <p className="text-white/50 text-xs mb-1">Acrónimo</p>
-                    <p className="text-white font-bold text-lg">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <User className="w-4 h-4 text-f1-red" />
+                      <p className="text-white/50 text-xs">Acrónimo</p>
+                    </div>
+                    <p className="text-white font-bold text-xl">
                       {pilotoSeleccionado.name_acronym || 'N/A'}
                     </p>
                   </div>
+
+                  {pilotoSeleccionado.country_code && (
+                    <div className="glass-dark rounded-xl p-4">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Flag className="w-4 h-4 text-f1-red" />
+                        <p className="text-white/50 text-xs">País</p>
+                      </div>
+                      <p className="text-white font-bold text-xl">
+                        {pilotoSeleccionado.country_code}
+                      </p>
+                    </div>
+                  )}
+
                   <div className="glass-dark rounded-xl p-4">
-                    <p className="text-white/50 text-xs mb-1">País</p>
-                    <p className="text-white font-bold text-lg">
-                      {pilotoSeleccionado.country_code || 'N/A'}
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Hash className="w-4 h-4 text-f1-red" />
+                      <p className="text-white/50 text-xs">Número</p>
+                    </div>
+                    <p className="text-white font-bold text-xl">
+                      {pilotoSeleccionado.driver_number || 'N/A'}
                     </p>
                   </div>
+
                   <div className="glass-dark rounded-xl p-4">
-                    <p className="text-white/50 text-xs mb-1">Número</p>
-                    <p className="text-white font-bold text-lg">
-                      #{pilotoSeleccionado.driver_number || 'N/A'}
-                    </p>
-                  </div>
-                  <div className="glass-dark rounded-xl p-4">
-                    <p className="text-white/50 text-xs mb-1">Estado</p>
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Shield className="w-4 h-4 text-f1-red" />
+                      <p className="text-white/50 text-xs">Estado</p>
+                    </div>
                     <div className="flex items-center space-x-2">
                       <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                       <p className="text-white font-bold text-sm">Activo</p>
                     </div>
                   </div>
-                </div>
+                </motion.div>
 
-                {/* Gráfica de rendimiento (datos de ejemplo) */}
-                <div className="mb-4">
-                  <GraficaPuntos
-                    datos={datosGraficaEjemplo}
-                    tipo="linea"
-                    titulo="Rendimiento en las últimas carreras"
-                  />
-                </div>
+                {/* Información adicional del equipo */}
+                {pilotoSeleccionado.team_name && pilotoSeleccionado.team_colour && (
+                  <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                    className="glass-dark rounded-xl p-6 mb-6"
+                  >
+                    <h3 className="text-lg font-bold text-white mb-4 flex items-center space-x-2">
+                      <Shield className="w-5 h-5 text-f1-red" />
+                      <span>Información del Equipo</span>
+                    </h3>
+                    
+                    <div className="flex items-center space-x-4">
+                      <div 
+                        className="w-16 h-16 rounded-xl shadow-lg"
+                        style={{ 
+                          background: `#${pilotoSeleccionado.team_colour}`,
+                        }}
+                      />
+                      <div className="flex-1">
+                        <p className="text-white font-semibold text-lg">
+                          {pilotoSeleccionado.team_name}
+                        </p>
+                        <p className="text-white/50 text-sm">
+                          Color: #{pilotoSeleccionado.team_colour}
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
 
                 {/* Nota informativa */}
-                <div className="glass-dark rounded-xl p-4 flex items-start space-x-3">
-                  <TrendingUp className="w-5 h-5 text-f1-red flex-shrink-0 mt-0.5" />
+                <motion.div
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className="glass-dark rounded-xl p-4 flex items-start space-x-3"
+                >
+                  <Info className="w-5 h-5 text-f1-red flex-shrink-0 mt-0.5" />
                   <p className="text-white/70 text-sm">
-                    Los datos de rendimiento y estadísticas detalladas se actualizarán 
-                    con información en tiempo real de las próximas carreras.
+                    Información obtenida de la API oficial de OpenF1. Los datos se actualizan automáticamente después de cada sesión.
                   </p>
-                </div>
+                </motion.div>
               </div>
             </motion.div>
           </>
@@ -207,4 +289,3 @@ const Pilotos = () => {
 };
 
 export default Pilotos;
-

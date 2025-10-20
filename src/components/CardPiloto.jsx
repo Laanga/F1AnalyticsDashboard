@@ -7,19 +7,22 @@ import { User, Flag } from 'lucide-react';
  * @param {Function} onClick - Función al hacer clic
  */
 const CardPiloto = ({ piloto, onClick }) => {
-  // Obtenemos el código del país para la bandera (si existe)
-  const paisCodigo = piloto.country_code || 'XX';
+  // Obtenemos el país
+  const pais = piloto.country_code || 'N/A';
   
   // Obtenemos las iniciales del nombre
   const iniciales = piloto.name_acronym || 
     (piloto.full_name ? piloto.full_name.split(' ').map(n => n[0]).join('').substring(0, 3) : '???');
+
+  // URL de la foto del piloto
+  const fotoUrl = piloto.headshot_url;
 
   return (
     <motion.div
       whileHover={{ y: -8, scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="glass glass-hover rounded-2xl p-6 cursor-pointer group"
+      className="glass glass-hover rounded-2xl p-6 cursor-pointer group overflow-hidden"
       role="button"
       tabIndex={0}
       aria-label={`Ver detalles de ${piloto.full_name || 'piloto'}`}
@@ -29,22 +32,53 @@ const CardPiloto = ({ piloto, onClick }) => {
         }
       }}
     >
-      {/* Header con número del piloto */}
+      {/* Header con foto o número del piloto */}
       <div className="flex items-start justify-between mb-4">
-        <motion.div
-          whileHover={{ scale: 1.1, rotate: 5 }}
-          className="w-16 h-16 rounded-xl bg-gradient-f1 flex items-center justify-center shadow-lg shadow-f1-red/30"
-        >
-          <span className="text-3xl font-bold text-white">
-            {piloto.driver_number || '?'}
-          </span>
-        </motion.div>
-
-        {/* Bandera del país */}
-        <div className="flex items-center space-x-2 text-white/60 text-xs">
-          <Flag className="w-4 h-4" />
-          <span className="font-medium">{paisCodigo}</span>
+        {/* Foto del piloto o número */}
+        <div className="relative">
+          {fotoUrl ? (
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className="w-20 h-20 rounded-xl overflow-hidden bg-gradient-f1 shadow-lg shadow-f1-red/30"
+            >
+              <img 
+                src={fotoUrl} 
+                alt={piloto.full_name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  // Si falla la imagen, mostrar número
+                  e.target.style.display = 'none';
+                  e.target.nextElementSibling.style.display = 'flex';
+                }}
+              />
+              <div 
+                className="w-full h-full bg-gradient-f1 items-center justify-center hidden"
+                style={{ display: 'none' }}
+              >
+                <span className="text-3xl font-bold text-white">
+                  {piloto.driver_number || '?'}
+                </span>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              whileHover={{ scale: 1.1, rotate: 5 }}
+              className="w-20 h-20 rounded-xl bg-gradient-f1 flex items-center justify-center shadow-lg shadow-f1-red/30"
+            >
+              <span className="text-3xl font-bold text-white">
+                {piloto.driver_number || '?'}
+              </span>
+            </motion.div>
+          )}
         </div>
+
+        {/* País (solo si existe) */}
+        {piloto.country_code && (
+          <div className="flex items-center space-x-2 text-white/60 text-xs">
+            <Flag className="w-4 h-4" />
+            <span className="font-medium">{pais}</span>
+          </div>
+        )}
       </div>
 
       {/* Información del piloto */}
@@ -84,4 +118,3 @@ const CardPiloto = ({ piloto, onClick }) => {
 };
 
 export default CardPiloto;
-

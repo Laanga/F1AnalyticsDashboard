@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { getStatistics } from '../services/openf1Service';
+import { getStatistics, getCurrentYear } from '../services/openf1Service';
 import Loader from '../components/Loader';
 import PanelEstadisticas from '../components/PanelEstadisticas';
 import GraficaPuntos from '../components/GraficaPuntos';
@@ -12,6 +12,7 @@ import { TrendingUp, Users, Flag, BarChart3, Trophy, Zap } from 'lucide-react';
 const Estadisticas = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const currentYear = getCurrentYear();
 
   useEffect(() => {
     const cargarEstadisticas = async () => {
@@ -73,10 +74,10 @@ const Estadisticas = () => {
       >
         <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
           Estadísticas
-          <span className="text-f1-red font-bold ml-3">Globales</span>
+          <span className="text-f1-red font-bold ml-3">{currentYear}</span>
         </h1>
         <p className="text-white/60 text-lg">
-          Análisis completo de la temporada 2024
+          Análisis completo de la temporada {currentYear}
         </p>
       </motion.div>
 
@@ -85,7 +86,7 @@ const Estadisticas = () => {
         <PanelEstadisticas
           titulo="Total de Pilotos"
           valor={stats.totalDrivers}
-          descripcion="Activos en 2024"
+          descripcion={`Activos en ${currentYear}`}
           icono={Users}
           tendencia="arriba"
           delay={0}
