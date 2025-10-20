@@ -64,7 +64,7 @@ const Inicio = () => {
           >
             F1 Analytics
             <br />
-            <span className="text-glow gradient-f1 bg-clip-text text-transparent">
+            <span className="text-f1-red font-bold">
               Dashboard
             </span>
           </motion.h1>

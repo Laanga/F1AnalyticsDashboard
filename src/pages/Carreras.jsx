@@ -67,7 +67,7 @@ const Carreras = () => {
       >
         <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
           Carreras
-          <span className="gradient-f1 bg-clip-text text-transparent ml-3">2024</span>
+          <span className="text-f1-red font-bold ml-3">2024</span>
         </h1>
         <p className="text-white/60 text-lg">
           Calendario y resultados de la temporada

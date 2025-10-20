@@ -73,7 +73,7 @@ const Estadisticas = () => {
       >
         <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
           Estadísticas
-          <span className="gradient-f1 bg-clip-text text-transparent ml-3">Globales</span>
+          <span className="text-f1-red font-bold ml-3">Globales</span>
         </h1>
         <p className="text-white/60 text-lg">
           Análisis completo de la temporada 2024

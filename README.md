@@ -7,24 +7,24 @@ Permite explorar datos de pilotos, escuderías y carreras a través de gráficos
 
 ## 🚀 Tecnologías utilizadas
 
-| Categoría                | Herramienta                                               |
-| ------------------------ | --------------------------------------------------------- |
-| **Frontend**             | [React](https://react.dev/) + [Vite](https://vitejs.dev/) |
-| **Base de datos / Auth** | [Supabase](https://supabase.com/)                         |
-| **Gráficos**             | [Recharts](https://recharts.org/en-US/)                   |
-| **Estilos**              | [Tailwind CSS](https://tailwindcss.com/)                  |
-| **Despliegue**           | [Vercel](https://vercel.com/)                             |
+| Categoría          | Herramienta                                               |
+| ------------------ | --------------------------------------------------------- |
+| **Frontend**       | [React](https://react.dev/) + [Vite](https://vitejs.dev/) |
+| **API de datos**   | [OpenF1](https://openf1.org/)                             |
+| **Gráficos**       | [Recharts](https://recharts.org/en-US/)                   |
+| **Estilos**        | [Tailwind CSS](https://tailwindcss.com/)                  |
+| **Despliegue**     | [Vercel](https://vercel.com/)                             |
 
 ---
 
 ## ✨ Características principales
 
-* 🧠 **Autenticación de usuarios** con Supabase (registro, login, logout).
-* 🏁 **Panel de control F1** con datos de pilotos, equipos y carreras.
+* 🏁 **Panel de control F1** con datos en tiempo real de pilotos, equipos y carreras.
 * 📊 **Visualizaciones interactivas** (gráficos de velocidad, puntos, posiciones, etc.).
 * 🧊 **Diseño Liquid Glass**: transparencias suaves, bordes redondeados, sombras sutiles y fondo difuminado.
 * 🌙 **Modo oscuro predeterminado** con acentos en rojo F1.
 * 📱 **Responsive design** optimizado para móvil, tablet y escritorio.
+* ⚡ **Datos actualizados** directamente desde la API oficial de OpenF1.
 
 ---
 
@@ -43,18 +43,13 @@ Permite explorar datos de pilotos, escuderías y carreras a través de gráficos
    npm install
    ```
 
-3. Crea un archivo `.env` con tus credenciales de Supabase:
-
-   ```bash
-   VITE_SUPABASE_URL=tu_url_de_supabase
-   VITE_SUPABASE_KEY=tu_clave_publica
-   ```
-
-4. Ejecuta el proyecto:
+3. Ejecuta el proyecto:
 
    ```bash
    npm run dev
    ```
+
+4. Abre tu navegador en `http://localhost:3000`
 
 ---
 
@@ -66,12 +61,11 @@ f1-stats-dashboard/
 ├── src/
 │   ├── components/      # Componentes reutilizables (Navbar, Cards, Charts...)
 │   ├── pages/           # Páginas principales (Inicio, Pilotos, Equipos...)
-│   ├── services/        # Conexión con Supabase
-│   ├── assets/          # Imágenes y recursos
+│   ├── services/        # Integración con OpenF1 API
+│   ├── styles/          # Estilos globales
 │   └── App.jsx          # Punto de entrada
 │
 ├── public/
-├── .env
 └── README.md
 ```
 
@@ -86,7 +80,7 @@ El estilo visual sigue la filosofía **Apple Liquid Glass**, con:
 * Tipografía moderna y espaciosa.
 * Contrastes elegantes entre negro, gris humo y acentos en rojo F1.
 
-> 💡 “Minimalismo, velocidad y precisión — igual que en la F1.”
+> 💡 "Minimalismo, velocidad y precisión — igual que en la F1."
 
 ---
 
@@ -100,10 +94,11 @@ Puedes desplegar el proyecto fácilmente en [Vercel](https://vercel.com/) con un
 
 ## 🧠 Futuras mejoras
 
-* 🏎️ Integrar API de [OpenF1](https://openf1.org/) para datos en tiempo real.
+* 🏎️ Expandir análisis con más endpoints de OpenF1 (telemetría, radio, clima).
 * ⚙️ Añadir backend propio en **FastAPI (Python)** para análisis avanzados.
 * 🧮 Mostrar estadísticas predictivas (estrategias, desgaste, etc.).
-* 👤 Perfil de usuario con personalización y favoritos.
+* 📈 Comparativas históricas entre temporadas.
+* 🎯 Filtros avanzados y búsqueda personalizada.
 
 ---
 

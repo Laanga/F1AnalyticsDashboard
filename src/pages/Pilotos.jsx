@@ -71,7 +71,7 @@ const Pilotos = () => {
       >
         <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
           Pilotos
-          <span className="gradient-f1 bg-clip-text text-transparent ml-3">2024</span>
+          <span className="text-f1-red font-bold ml-3">2024</span>
         </h1>
         <p className="text-white/60 text-lg">
           Explora el rendimiento de cada piloto de la temporada actual

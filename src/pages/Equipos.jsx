@@ -69,7 +69,7 @@ const Equipos = () => {
       >
         <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
           Equipos
-          <span className="gradient-f1 bg-clip-text text-transparent ml-3">F1</span>
+          <span className="text-f1-red font-bold ml-3">F1</span>
         </h1>
         <p className="text-white/60 text-lg">
           Análisis de constructores y sus pilotos
