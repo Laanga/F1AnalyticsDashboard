@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getDrivers, getCurrentYear } from '../services/openf1Service';
-import CardPiloto from '../components/CardPiloto';
-import Loader from '../components/Loader';
+import CardPiloto from '../components/pilotos/CardPiloto';
+import Loader from '../components/ui/Loader';
 import { X, User, Flag, Hash, Shield, Info } from 'lucide-react';
 
 /**

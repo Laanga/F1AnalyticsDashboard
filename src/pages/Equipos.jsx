@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { getDrivers, getCurrentYear } from '../services/openf1Service';
-import Loader from '../components/Loader';
-import GraficaPuntos from '../components/GraficaPuntos';
+import { getChampionshipStandings, getCurrentYear } from '../services/openf1Service';
+import Loader from '../components/ui/Loader';
+import GraficaPuntos from '../components/estadisticas/GraficaPuntos';
 import { Shield, Users, TrendingUp } from 'lucide-react';
 
 /**
@@ -17,25 +17,27 @@ const Equipos = () => {
     const cargarEquipos = async () => {
       try {
         setLoading(true);
-        const pilotos = await getDrivers();
         
-        // Agrupar pilotos por equipo
-        const equiposAgrupados = pilotos.reduce((acc, piloto) => {
-          const nombreEquipo = piloto.team_name || 'Equipo Desconocido';
-          
-          if (!acc[nombreEquipo]) {
-            acc[nombreEquipo] = {
-              nombre: nombreEquipo,
-              pilotos: [],
-              color: piloto.team_colour || '#e10600',
-            };
-          }
-          
-          acc[nombreEquipo].pilotos.push(piloto);
-          return acc;
-        }, {});
+        // Una sola llamada optimizada que ya incluye toda la información
+        const standingsData = await getChampionshipStandings();
+        
+        // Usar directamente los datos de constructores que ya incluyen pilotos
+        const equiposFormateados = standingsData.constructors.map(constructor => ({
+          nombre: constructor.team_name,
+          pilotos: constructor.drivers.map(driver => ({
+            driver_number: driver.driver_number,
+            full_name: driver.full_name,
+            name_acronym: driver.name_acronym,
+            puntos: driver.points,
+            team_name: constructor.team_name,
+            team_colour: constructor.team_colour,
+            country_code: '' // No disponible en esta estructura
+          })),
+          color: constructor.team_colour || '#e10600',
+          puntos: constructor.points
+        }));
 
-        setEquipos(Object.values(equiposAgrupados));
+        setEquipos(equiposFormateados);
       } catch (error) {
         console.error('Error al cargar equipos:', error);
       } finally {
@@ -46,11 +48,14 @@ const Equipos = () => {
     cargarEquipos();
   }, []);
 
-  // Datos de ejemplo para comparación de equipos
-  const datosComparacion = equipos.slice(0, 6).map(equipo => ({
-    name: equipo.nombre.length > 15 ? equipo.nombre.substring(0, 15) + '...' : equipo.nombre,
-    value: Math.floor(Math.random() * 400) + 100, // Datos simulados
-  }));
+  // Datos reales para comparación de equipos
+  const datosComparacion = equipos
+    .sort((a, b) => b.puntos - a.puntos) // Ordenar por puntos descendente
+    .slice(0, 6)
+    .map(equipo => ({
+      name: equipo.nombre.length > 15 ? equipo.nombre.substring(0, 15) + '...' : equipo.nombre,
+      value: equipo.puntos, // Datos reales de puntos
+    }));
 
   if (loading) {
     return (
@@ -87,7 +92,7 @@ const Equipos = () => {
         <GraficaPuntos
           datos={datosComparacion}
           tipo="barra"
-          titulo="Comparativa de Puntos por Equipo (Simulado)"
+          titulo="Comparativa de Puntos por Equipo - Temporada 2025"
         />
       </motion.div>
 
@@ -131,11 +136,11 @@ const Equipos = () => {
                 </div>
               </div>
 
-              {/* Badge de puntos (simulado) */}
+              {/* Badge de puntos reales */}
               <div className="text-right">
                 <p className="text-white/50 text-xs mb-1">Puntos</p>
                 <p className="text-3xl font-bold text-white">
-                  {Math.floor(Math.random() * 400) + 100}
+                  {equipo.puntos}
                 </p>
               </div>
             </div>
@@ -171,11 +176,11 @@ const Equipos = () => {
                     </div>
                   </div>
                   
-                  {/* Puntos del piloto (simulados) */}
+                  {/* Puntos del piloto reales */}
                   <div className="text-right">
                     <p className="text-white/50 text-xs">Pts</p>
                     <p className="text-white font-bold">
-                      {Math.floor(Math.random() * 200)}
+                      {piloto.puntos}
                     </p>
                   </div>
                 </motion.div>
@@ -204,8 +209,8 @@ const Equipos = () => {
         className="mt-10 glass-dark rounded-2xl p-6 text-center"
       >
         <p className="text-white/60 text-sm">
-          <strong className="text-white">Nota:</strong> Los puntos mostrados son simulados. 
-          La integración con datos reales de standings se implementará en futuras versiones.
+          <strong className="text-white">Datos actualizados:</strong> Los puntos mostrados son calculados en tiempo real 
+          basados en los resultados de las carreras de la temporada 2025.
         </p>
       </motion.div>
     </div>

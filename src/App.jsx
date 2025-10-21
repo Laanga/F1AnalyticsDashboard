@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import Navbar from './components/Navbar';
-import FondoAnimado from './components/FondoAnimado';
+import Navbar from './components/layout/Navbar';
+import FondoAnimado from './components/ui/FondoAnimado';
 import Inicio from './pages/Inicio';
 import Pilotos from './pages/Pilotos';
 import Equipos from './pages/Equipos';

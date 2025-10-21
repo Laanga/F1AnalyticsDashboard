@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { getRaces, getMeetings, getCurrentYear } from '../services/openf1Service';
-import Loader from '../components/Loader';
+import Loader from '../components/ui/Loader';
+import { formatearFecha, isCarreraCompletada } from '../utils/dateUtils';
 import { Flag, MapPin, Calendar, Trophy, CheckCircle2, Clock } from 'lucide-react';
 
 /**
@@ -34,22 +35,9 @@ const Carreras = () => {
     cargarCarreras();
   }, []);
 
-  // Formatea la fecha
-  const formatearFecha = (fecha) => {
-    if (!fecha) return 'Fecha no disponible';
-    const date = new Date(fecha);
-    return date.toLocaleDateString('es-ES', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  };
 
-  // Determina si una carrera ya pasó
-  const isCarreraCompletada = (fecha) => {
-    if (!fecha) return false;
-    return new Date(fecha) < new Date();
-  };
+
+
 
   // Separa carreras completadas y próximas
   const carrerasCompletadas = carreras.filter(c => isCarreraCompletada(c.date_end));
