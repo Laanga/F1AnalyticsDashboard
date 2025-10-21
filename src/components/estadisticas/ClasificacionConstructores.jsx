@@ -55,7 +55,7 @@ const ClasificacionConstructores = () => {
         <div className="space-y-3">
           {constructores.slice(0, 10).map((constructor, index) => (
             <motion.div
-              key={constructor.name || index}
+              key={constructor.constructor?.name || index}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.1 }}
@@ -70,8 +70,8 @@ const ClasificacionConstructores = () => {
                   {constructor.position || index + 1}
                 </div>
                 <div>
-                  <p className="text-white font-medium">{constructor.name || constructor.team_name}</p>
-                  <p className="text-gray-400 text-sm">{constructor.nationality}</p>
+                  <p className="text-white font-medium">{constructor.constructor?.name || constructor.team_name}</p>
+                  <p className="text-gray-400 text-sm">{constructor.constructor?.nationality}</p>
                 </div>
               </div>
               

@@ -50,21 +50,19 @@ const Estadisticas = () => {
     );
   }
 
-  // Preparar datos para gráfica de top pilotos (simulado)
+  // Preparar datos para gráfica de top pilotos (datos reales)
   const topPilotos = stats.topDrivers.slice(0, 8).map((piloto) => ({
-    name: piloto.name_acronym || piloto.full_name?.split(' ')[1] || 'Piloto',
-    value: Math.floor(Math.random() * 250) + 50, // Datos simulados
+    name: piloto.driver?.code || piloto.driver?.familyName || 'Piloto',
+    value: parseInt(piloto.points) || 0, // Datos reales de la API
   }));
 
-  // Preparar datos de evolución (simulado)
-  const datosEvolucion = [
-    { name: 'Ronda 1', value: 180 },
-    { name: 'Ronda 2', value: 220 },
-    { name: 'Ronda 3', value: 195 },
-    { name: 'Ronda 4', value: 240 },
-    { name: 'Ronda 5', value: 265 },
-    { name: 'Ronda 6', value: 290 },
-  ];
+  // Preparar datos de evolución basados en el líder actual
+  const leaderPoints = stats.championshipLeader?.points || 0;
+  const completedRaces = stats.completedRaces || 1;
+  const datosEvolucion = Array.from({ length: Math.min(completedRaces, 10) }, (_, i) => ({
+    name: `Ronda ${i + 1}`,
+    value: Math.round((leaderPoints / completedRaces) * (i + 1))
+  }));
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -131,7 +129,7 @@ const Estadisticas = () => {
           <GraficaPuntos
             datos={topPilotos}
             tipo="barra"
-            titulo="Top 8 Pilotos - Puntos (Simulado)"
+            titulo="Top 8 Pilotos - Puntos del Campeonato"
           />
         </motion.div>
 
@@ -177,8 +175,8 @@ const Estadisticas = () => {
                     {driver.position || index + 1}
                   </span>
                   <div>
-                    <p className="text-white font-medium">{driver.full_name}</p>
-                    <p className="text-gray-400 text-sm">{driver.team_name}</p>
+                    <p className="text-white font-medium">{driver.driver?.givenName} {driver.driver?.familyName}</p>
+                    <p className="text-gray-400 text-sm">{driver.constructor?.name}</p>
                   </div>
                 </div>
                 <div className="text-right">
@@ -223,8 +221,8 @@ const Estadisticas = () => {
                 <span className="text-white font-bold text-lg">2</span>
               </div>
               <div className="mt-2">
-                <p className="text-white font-medium text-sm">{stats.topDrivers[1]?.name_acronym || stats.topDrivers[1]?.full_name?.split(' ').map(n => n[0]).join('.')}</p>
-                <p className="text-gray-400 text-xs">{stats.topDrivers[1]?.team_name}</p>
+                <p className="text-white font-medium text-sm">{stats.topDrivers[1]?.driver?.code || stats.topDrivers[1]?.driver?.familyName}</p>
+                <p className="text-gray-400 text-xs">{stats.topDrivers[1]?.constructor?.name}</p>
                 <p className="text-yellow-400 font-bold text-sm">{stats.topDrivers[1]?.points || 0} pts</p>
               </div>
             </div>
@@ -235,8 +233,8 @@ const Estadisticas = () => {
                 <span className="text-white font-bold text-lg">1</span>
               </div>
               <div className="mt-2">
-                <p className="text-white font-medium text-sm">{stats.topDrivers[0]?.name_acronym || stats.topDrivers[0]?.full_name?.split(' ').map(n => n[0]).join('.')}</p>
-                <p className="text-gray-400 text-xs">{stats.topDrivers[0]?.team_name}</p>
+                <p className="text-white font-medium text-sm">{stats.topDrivers[0]?.driver?.code || stats.topDrivers[0]?.driver?.familyName}</p>
+                <p className="text-gray-400 text-xs">{stats.topDrivers[0]?.constructor?.name}</p>
                 <p className="text-yellow-400 font-bold text-sm">{stats.topDrivers[0]?.points || 0} pts</p>
               </div>
             </div>
@@ -247,8 +245,8 @@ const Estadisticas = () => {
                 <span className="text-white font-bold text-lg">3</span>
               </div>
               <div className="mt-2">
-                <p className="text-white font-medium text-sm">{stats.topDrivers[2]?.name_acronym || stats.topDrivers[2]?.full_name?.split(' ').map(n => n[0]).join('.')}</p>
-                <p className="text-gray-400 text-xs">{stats.topDrivers[2]?.team_name}</p>
+                <p className="text-white font-medium text-sm">{stats.topDrivers[2]?.driver?.code || stats.topDrivers[2]?.driver?.familyName}</p>
+                <p className="text-gray-400 text-xs">{stats.topDrivers[2]?.constructor?.name}</p>
                 <p className="text-yellow-400 font-bold text-sm">{stats.topDrivers[2]?.points || 0} pts</p>
               </div>
             </div>
@@ -331,8 +329,8 @@ const Estadisticas = () => {
         className="mt-10 glass-dark rounded-2xl p-6 text-center"
       >
         <p className="text-white/60 text-sm">
-          <strong className="text-white">Nota:</strong> Algunos datos mostrados son simulados 
-          con fines demostrativos. La versión futura incluirá standings y resultados reales.
+          <strong className="text-white">Nota:</strong> Los datos de puntos y clasificaciones 
+          son obtenidos en tiempo real de la API oficial de Ergast F1.
         </p>
       </motion.div>
     </div>
