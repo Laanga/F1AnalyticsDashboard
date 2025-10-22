@@ -15,7 +15,7 @@ const GraficaPuntos = ({ datos = [], tipo = 'linea', titulo = 'Gráfica' }) => {
         <div className="glass rounded-lg p-3 shadow-xl">
           <p className="text-white font-semibold mb-1">{label}</p>
           {payload.map((entry, index) => (
-            <p key={index} className="text-sm" style={{ color: entry.color }}>
+            <p key={index} className="text-sm text-white">
               {entry.name}: {entry.value}
             </p>
           ))}

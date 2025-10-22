@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { getStatistics, getCurrentYear } from '../services/openf1Service';
+import { getStatistics } from '../services/openf1Service';
+import { useYear } from '../contexts/YearContext';
 import Loader from '../components/ui/Loader';
 import GraficaPuntos from '../components/estadisticas/GraficaPuntos';
 import PanelEstadisticas from '../components/estadisticas/PanelEstadisticas';
@@ -13,7 +14,7 @@ import { TrendingUp, Users, Flag, BarChart3, Trophy, Zap } from 'lucide-react';
 const Estadisticas = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const currentYear = getCurrentYear();
+  const { selectedYear } = useYear();
 
   useEffect(() => {
     const cargarEstadisticas = async () => {
@@ -30,7 +31,7 @@ const Estadisticas = () => {
     };
 
     cargarEstadisticas();
-  }, []);
+  }, [selectedYear]);
 
   if (loading) {
     return (
@@ -74,10 +75,10 @@ const Estadisticas = () => {
       >
         <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
           Estadísticas
-          <span className="text-f1-red font-bold ml-3">{currentYear}</span>
+          <span className="text-f1-red font-bold ml-3">Temporada {selectedYear}</span>
         </h1>
         <p className="text-white/60 text-lg">
-          Análisis completo de la temporada {currentYear}
+          Análisis completo de la temporada {selectedYear}
         </p>
       </motion.div>
 
@@ -86,7 +87,7 @@ const Estadisticas = () => {
         <PanelEstadisticas
           titulo="Total de Pilotos"
           valor={stats.totalDrivers}
-          descripcion={`Activos en ${currentYear}`}
+          descripcion={`Activos en ${selectedYear}`}
           icono={Users}
           tendencia="arriba"
           delay={0}

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { getRaces, getMeetings, getCurrentYear } from '../services/openf1Service';
+import { getRaces, getMeetings } from '../services/openf1Service';
 import Loader from '../components/ui/Loader';
 import { formatearFecha, isCarreraCompletada } from '../utils/dateUtils';
 import { Flag, MapPin, Calendar, Trophy, CheckCircle2, Clock } from 'lucide-react';
+import { useYear } from '../contexts/YearContext';
 
 /**
  * Página de Carreras - Muestra las carreras de la temporada
@@ -12,7 +13,7 @@ const Carreras = () => {
   const [carreras, setCarreras] = useState([]);
   const [meetings, setMeetings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const currentYear = getCurrentYear();
+  const { selectedYear } = useYear();
 
   useEffect(() => {
     const cargarCarreras = async () => {
@@ -33,7 +34,7 @@ const Carreras = () => {
     };
 
     cargarCarreras();
-  }, []);
+  }, [selectedYear]);
 
 
 
@@ -61,7 +62,7 @@ const Carreras = () => {
       >
         <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
           Carreras
-          <span className="text-f1-red font-bold ml-3">{currentYear}</span>
+          <span className="text-f1-red font-bold ml-3">Temporada {selectedYear}</span>
         </h1>
         <p className="text-white/60 text-lg">
           Calendario y resultados de la temporada
@@ -190,7 +191,7 @@ const Carreras = () => {
           <div className="divide-y divide-white/10">
             {carrerasCompletadas.length === 0 ? (
               <div className="px-6 py-12 text-center text-white/50">
-                Todavía no hay carreras completadas en {currentYear}
+                Todavía no hay carreras completadas en {selectedYear}
               </div>
             ) : (
               carrerasCompletadas.map((carrera, index) => {
@@ -259,7 +260,7 @@ const Carreras = () => {
         >
           <Flag className="w-16 h-16 text-white/30 mx-auto mb-4" />
           <p className="text-white/60 text-lg">
-            No hay datos de carreras disponibles para {currentYear}
+            No hay datos de carreras disponibles para {selectedYear}
           </p>
         </motion.div>
       )}

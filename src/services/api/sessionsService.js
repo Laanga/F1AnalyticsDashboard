@@ -1,13 +1,15 @@
 import axios from 'axios';
 import { API_CONFIG, getCurrentYear } from '../config/apiConfig.js';
 import { getCachedData, setCachedData, delay } from '../utils/cache.js';
+import { getSelectedYear } from '../../hooks/useSelectedYear.js';
 
 /**
  * Servicio para operaciones relacionadas con sesiones y carreras
  */
 
 export const getSessions = async (sessionName = null) => {
-  const cacheKey = sessionName ? `sessions_${sessionName}_${getCurrentYear()}` : `sessions_${getCurrentYear()}`;
+  const selectedYear = getSelectedYear();
+  const cacheKey = sessionName ? `sessions_${sessionName}_${selectedYear}` : `sessions_${selectedYear}`;
   
   const cachedData = getCachedData(cacheKey);
   if (cachedData) {
@@ -50,7 +52,8 @@ export const getLatestSession = async () => {
 };
 
 export const getMeetings = async () => {
-  const cacheKey = `meetings_${getCurrentYear()}`;
+  const selectedYear = getSelectedYear();
+  const cacheKey = `meetings_${selectedYear}`;
   
   const cachedData = getCachedData(cacheKey);
   if (cachedData) {
@@ -62,17 +65,16 @@ export const getMeetings = async () => {
     const response = await axios.get(`${API_CONFIG.OPENF1.BASE_URL}/meetings`);
     
     const meetings = response.data || [];
-    const currentYear = getCurrentYear();
     
-    // Filtrar meetings del año actual
-    const currentYearMeetings = meetings.filter(meeting => {
+    // Filtrar meetings del año seleccionado
+    const selectedYearMeetings = meetings.filter(meeting => {
       const meetingYear = new Date(meeting.date_start).getFullYear();
-      return meetingYear === currentYear;
+      return meetingYear === selectedYear;
     });
 
-    setCachedData(cacheKey, currentYearMeetings);
-    console.log(`✅ ${currentYearMeetings.length} meetings obtenidos para ${currentYear}`);
-    return currentYearMeetings;
+    setCachedData(cacheKey, selectedYearMeetings);
+    console.log(`✅ ${selectedYearMeetings.length} meetings obtenidos para ${selectedYear}`);
+    return selectedYearMeetings;
   } catch (error) {
     console.error('❌ Error al obtener meetings:', error.message);
     return [];

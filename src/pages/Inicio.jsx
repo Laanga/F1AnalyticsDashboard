@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Flag, TrendingUp, Users, Zap } from 'lucide-react';
+import { Flag, TrendingUp, Users, Zap, Calendar } from 'lucide-react';
 import { getSeasonProgress, getCurrentYear } from '../services/openf1Service';
+import { useYear } from '../contexts/YearContext';
 
 /**
  * Página de inicio - Hero con presentación del dashboard
  */
 const Inicio = () => {
   const navigate = useNavigate();
+  const { selectedYear, isCurrentSeason } = useYear();
   const [seasonProgress, setSeasonProgress] = useState(null);
-  const [currentYear] = useState(getCurrentYear());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,6 +34,8 @@ const Inicio = () => {
 
     fetchProgress();
   }, []);
+
+
 
   // Características destacadas
   const caracteristicas = [
@@ -68,7 +71,7 @@ const Inicio = () => {
           transition={{ duration: 0.8 }}
           className="text-center"
         >
-          {/* Badge con progreso de temporada */}
+          {/* Badge informativo de temporada */}
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -76,11 +79,14 @@ const Inicio = () => {
             className="inline-block mb-6"
           >
             <div className="glass rounded-full px-6 py-2 inline-flex items-center space-x-3">
-              <div className="w-2 h-2 bg-f1-red rounded-full animate-pulse" />
+              <Calendar className="w-4 h-4 text-f1-red" />
               <span className="text-sm text-white/80">
-                Temporada {currentYear}
+                Temporada {selectedYear}
               </span>
-              {!loading && seasonProgress && seasonProgress.total > 0 && (
+              {isCurrentSeason && (
+                <div className="w-2 h-2 bg-f1-red rounded-full animate-pulse" />
+              )}
+              {!loading && seasonProgress && seasonProgress.total > 0 && isCurrentSeason && (
                 <>
                   <div className="w-px h-4 bg-white/20" />
                   <span className="text-sm text-white/60">
@@ -139,6 +145,8 @@ const Inicio = () => {
             </span>
           </motion.button>
 
+
+
           {/* Grid de características */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
@@ -195,7 +203,7 @@ const Inicio = () => {
               >
                 OpenF1 API
               </a>
-              {' '}• {currentYear}
+              {' '}• {selectedYear}
             </p>
           </motion.div>
         </motion.div>

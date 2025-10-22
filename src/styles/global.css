@@ -4,16 +4,11 @@
 
 /* === Estilos base === */
 @layer base {
-  * {
-    
-  }
   
   body {
     @apply bg-f1-dark text-white font-sans antialiased;
-    background-image: 
-      radial-gradient(at 0% 0%, rgba(225, 6, 0, 0.05) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, rgba(225, 6, 0, 0.05) 0px, transparent 50%);
-    min-height: 100vh;
+    background: radial-gradient(ellipse at center, rgba(225, 6, 0, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(225, 6, 0, 0.05) 0%, transparent 50%);
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -23,39 +18,22 @@
 
 /* === Utilidades personalizadas === */
 @layer utilities {
-  /* Efecto glass principal - MODIFICA AQUÍ LA OPACIDAD DEL VIDRIO */
+  /* Efectos glass */
   .glass {
     @apply backdrop-blur-xl bg-white/10 border border-white/20 shadow-glass;
-    /* 
-      Para más opacidad: cambia bg-white/10 a bg-white/15 o bg-white/20
-      Para menos opacidad: cambia a bg-white/5
-      Para cambiar el blur: backdrop-blur-xl (xl=24px), backdrop-blur-2xl (40px), backdrop-blur-lg (16px)
-    */
   }
 
   .glass-hover {
-    @apply transition-all duration-300 hover:bg-white/15 hover:shadow-glass-hover hover:scale-[1.02];
+    @apply transition-all duration-300 hover:bg-white/20 hover:shadow-glass-hover hover:scale-[1.01];
   }
 
-  /* Efecto glass oscuro */
-  .glass-dark {
-    @apply backdrop-blur-xl bg-black/30 border border-white/10 shadow-glass;
-  }
-
-  /* Gradiente F1 - MODIFICA AQUÍ LOS COLORES PRINCIPALES */
+  /* Gradientes */
   .gradient-f1 {
-    background: linear-gradient(135deg, #e10600 0%, #8b0000 100%);
-    /* 
-      Color primario: #e10600 (rojo F1)
-      Color secundario: #8b0000 (rojo oscuro)
-      Puedes cambiar a otros colores manteniendo el formato:
-      background: linear-gradient(135deg, #COLOR1 0%, #COLOR2 100%);
-    */
+    background: linear-gradient(135deg, #e10600 0%, #b91c1c 50%, #7f1d1d 100%);
   }
 
-  /* Gradiente sutil para fondos */
   .gradient-dark {
-    background: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%);
+    background: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 50%, #0f172a 100%);
   }
 
   /* Texto con brillo */
@@ -67,16 +45,16 @@
   .fade-in {
     animation: fadeIn 0.6s ease-in-out;
   }
+}
 
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -90,11 +68,11 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-white/20 rounded-full;
+  @apply bg-f1-gray rounded-full;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-white/30;
+  @apply bg-f1-red;
 }
 
 /* === Selección de texto === */

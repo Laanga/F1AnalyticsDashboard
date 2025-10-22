@@ -1,14 +1,15 @@
 import axios from 'axios';
 import { API_CONFIG, getCurrentYear } from '../config/apiConfig.js';
 import { getCachedData, setCachedData } from '../utils/cache.js';
+import { getSelectedYear } from '../../hooks/useSelectedYear.js';
 
 /**
  * Servicio para operaciones relacionadas con clasificaciones y standings
  */
 
 export const getDriverStandingsFromErgast = async () => {
-  const currentYear = getCurrentYear();
-  const cacheKey = `driver_standings_ergast_${currentYear}`;
+  const selectedYear = getSelectedYear();
+  const cacheKey = `driver_standings_ergast_${selectedYear}`;
   
   const cachedData = getCachedData(cacheKey);
   if (cachedData) {
@@ -16,8 +17,8 @@ export const getDriverStandingsFromErgast = async () => {
   }
 
   try {
-    console.log(`🏆 Obteniendo clasificación de pilotos desde Ergast para ${currentYear}...`);
-    const response = await axios.get(`${API_CONFIG.JOLPICA.BASE_URL}/${currentYear}/driverstandings.json`);
+    console.log(`🏆 Obteniendo clasificación de pilotos desde Ergast para ${selectedYear}...`);
+    const response = await axios.get(`${API_CONFIG.JOLPICA.BASE_URL}/${selectedYear}/driverstandings.json`);
     
     if (response.data?.MRData?.StandingsTable?.StandingsLists?.[0]?.DriverStandings) {
       const standings = response.data.MRData.StandingsTable.StandingsLists[0].DriverStandings;
@@ -53,8 +54,8 @@ export const getDriverStandingsFromErgast = async () => {
 };
 
 export const getConstructorStandingsFromErgast = async () => {
-  const currentYear = getCurrentYear();
-  const cacheKey = `constructor_standings_ergast_${currentYear}`;
+  const selectedYear = getSelectedYear();
+  const cacheKey = `constructor_standings_ergast_${selectedYear}`;
   
   const cachedData = getCachedData(cacheKey);
   if (cachedData) {
@@ -62,8 +63,8 @@ export const getConstructorStandingsFromErgast = async () => {
   }
 
   try {
-    console.log(`🏗️ Obteniendo clasificación de constructores desde Ergast para ${currentYear}...`);
-    const response = await axios.get(`${API_CONFIG.JOLPICA.BASE_URL}/${currentYear}/constructorstandings.json`);
+    console.log(`🏗️ Obteniendo clasificación de constructores desde Ergast para ${selectedYear}...`);
+    const response = await axios.get(`${API_CONFIG.JOLPICA.BASE_URL}/${selectedYear}/constructorstandings.json`);
     
     if (response.data?.MRData?.StandingsTable?.StandingsLists?.[0]?.ConstructorStandings) {
       const standings = response.data.MRData.StandingsTable.StandingsLists[0].ConstructorStandings;

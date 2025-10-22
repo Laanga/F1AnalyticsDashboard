@@ -37,7 +37,7 @@ const Navbar = () => {
             </span>
           </Link>
 
-          {/* Enlaces de navegación */}
+          {/* Enlaces de navegación centrados */}
           <div className="flex items-center space-x-1 sm:space-x-2">
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -80,15 +80,8 @@ const Navbar = () => {
             })}
           </div>
 
-          {/* Decoración - punto de estado */}
-          <motion.div
-            animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="hidden lg:flex items-center space-x-2"
-          >
-            <div className="w-2 h-2 bg-green-500 rounded-full shadow-lg shadow-green-500/50" />
-            <span className="text-xs text-white/60">En vivo</span>
-          </motion.div>
+          {/* Espacio vacío para mantener el balance visual */}
+          <div className="w-20 sm:w-24"></div>
         </div>
       </div>
     </motion.nav>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, Users, TrendingUp } from 'lucide-react';
-import { getConstructorStandingsFromErgast } from '../../services/openf1Service';
+import { getConstructorStandingsFromErgast, getCurrentYear } from '../../services/openf1Service';
 import Loader from '../ui/Loader';
 
 const ClasificacionConstructores = () => {
@@ -106,7 +106,7 @@ const ClasificacionConstructores = () => {
         <div className="mt-6 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
           <p className="text-green-400 text-sm flex items-center gap-2">
             <TrendingUp className="w-4 h-4" />
-            <strong>Datos oficiales</strong> de la clasificación de constructores 2025
+            <strong>Datos oficiales</strong> de la clasificación de constructores {getCurrentYear()}
           </p>
         </div>
       )}

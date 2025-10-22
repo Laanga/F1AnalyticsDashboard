@@ -1,26 +1,25 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getDrivers, getCurrentYear } from '../services/openf1Service';
+import { getDrivers } from '../services/openf1Service';
 import CardPiloto from '../components/pilotos/CardPiloto';
 import Loader from '../components/ui/Loader';
 import { X, User, Flag, Hash, Shield, Info } from 'lucide-react';
+import { getDriverNationality } from '../utils/nationalityUtils';
+import { getDriverFlag } from '../utils/flagUtils.jsx';
+import { useYear } from '../contexts/YearContext';
 
-/**
- * Página de Pilotos - Muestra todos los pilotos con sus detalles
- */
 const Pilotos = () => {
   const [pilotos, setPilotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pilotoSeleccionado, setPilotoSeleccionado] = useState(null);
   const [modalAbierto, setModalAbierto] = useState(false);
-  const currentYear = getCurrentYear();
+  const { selectedYear } = useYear();
 
-  // Cargar pilotos al montar el componente
   useEffect(() => {
     const cargarPilotos = async () => {
       try {
         setLoading(true);
-        const data = await getDrivers();
+        const data = await getDrivers(selectedYear);
         setPilotos(data);
       } catch (error) {
         console.error('Error al cargar pilotos:', error);
@@ -30,15 +29,13 @@ const Pilotos = () => {
     };
 
     cargarPilotos();
-  }, []);
+  }, [selectedYear]);
 
-  // Manejar clic en tarjeta de piloto
   const handleClickPiloto = (piloto) => {
     setPilotoSeleccionado(piloto);
     setModalAbierto(true);
   };
 
-  // Cerrar modal
   const handleCerrarModal = () => {
     setModalAbierto(false);
     setTimeout(() => setPilotoSeleccionado(null), 300);
@@ -54,7 +51,6 @@ const Pilotos = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -62,14 +58,13 @@ const Pilotos = () => {
       >
         <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
           Pilotos
-          <span className="text-f1-red font-bold ml-3">{currentYear}</span>
+          <span className="text-f1-red font-bold ml-3">Temporada {selectedYear}</span>
         </h1>
         <p className="text-white/60 text-lg">
-          {pilotos.length} pilotos activos en la temporada {currentYear}
+          {pilotos.length} pilotos activos en la temporada {selectedYear}
         </p>
       </motion.div>
 
-      {/* Grid de pilotos */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -91,11 +86,9 @@ const Pilotos = () => {
         ))}
       </motion.div>
 
-      {/* Modal de detalles del piloto */}
       <AnimatePresence>
         {modalAbierto && pilotoSeleccionado && (
           <>
-            {/* Overlay */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -104,7 +97,6 @@ const Pilotos = () => {
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
             />
 
-            {/* Modal */}
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -112,10 +104,8 @@ const Pilotos = () => {
               className="fixed inset-0 z-50 flex items-center justify-center p-4"
             >
               <div className="glass rounded-3xl p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-                {/* Header del modal */}
                 <div className="flex items-start justify-between mb-8">
                   <div className="flex items-start space-x-6">
-                    {/* Foto grande del piloto */}
                     {pilotoSeleccionado.headshot_url ? (
                       <motion.div
                         initial={{ scale: 0.8, opacity: 0 }}
@@ -172,7 +162,6 @@ const Pilotos = () => {
                     </div>
                   </div>
 
-                  {/* Botón cerrar */}
                   <motion.button
                     whileHover={{ scale: 1.1, rotate: 90 }}
                     whileTap={{ scale: 0.9 }}
@@ -184,7 +173,7 @@ const Pilotos = () => {
                   </motion.button>
                 </div>
 
-                {/* Información del piloto */}
+                
                 <motion.div
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
@@ -201,17 +190,30 @@ const Pilotos = () => {
                     </p>
                   </div>
 
-                  {pilotoSeleccionado.country_code && (
-                    <div className="glass-dark rounded-xl p-4">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Flag className="w-4 h-4 text-f1-red" />
-                        <p className="text-white/50 text-xs">País</p>
-                      </div>
-                      <p className="text-white font-bold text-xl">
-                        {pilotoSeleccionado.country_code}
-                      </p>
+                  <div className="glass-dark rounded-xl p-4">
+                    <div className="flex items-center space-x-2 mb-2">
+                      {getDriverFlag(pilotoSeleccionado) ? (
+                        <img 
+                          src={getDriverFlag(pilotoSeleccionado)} 
+                          alt={`Bandera de ${getDriverNationality(pilotoSeleccionado)}`}
+                          className="w-5 h-4 rounded-sm object-cover shadow-sm"
+                          onError={(e) => {
+                            // Si falla la bandera, mostrar ícono genérico
+                            e.target.style.display = 'none';
+                            e.target.nextElementSibling.style.display = 'block';
+                          }}
+                        />
+                      ) : null}
+                      <Flag 
+                        className="w-4 h-4 text-f1-red hidden" 
+                        style={{ display: getDriverFlag(pilotoSeleccionado) ? 'none' : 'block' }}
+                      />
+                      <p className="text-white/50 text-xs">Nacionalidad</p>
                     </div>
-                  )}
+                    <p className="text-white font-bold text-xl">
+                      {getDriverNationality(pilotoSeleccionado)}
+                    </p>
+                  </div>
 
                   <div className="glass-dark rounded-xl p-4">
                     <div className="flex items-center space-x-2 mb-2">
@@ -267,7 +269,6 @@ const Pilotos = () => {
                   </motion.div>
                 )}
 
-                {/* Nota informativa */}
                 <motion.div
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}

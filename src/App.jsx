@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { YearProvider } from './contexts/YearContext';
 import Navbar from './components/layout/Navbar';
 import FondoAnimado from './components/ui/FondoAnimado';
 import Inicio from './pages/Inicio';
@@ -36,7 +37,9 @@ const AppContent = () => {
 const App = () => {
   return (
     <Router>
-      <AppContent />
+      <YearProvider>
+        <AppContent />
+      </YearProvider>
     </Router>
   );
 };

@@ -7,13 +7,11 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Paleta F1 personalizada
         'f1-red': '#e10600',
         'f1-dark': '#0a0a0a',
         'f1-gray': '#1a1a1a',
       },
       fontFamily: {
-        // Tipografía estilo Apple
         'sans': ['Inter', 'SF Pro Display', 'system-ui', 'sans-serif'],
       },
       backdropBlur: {

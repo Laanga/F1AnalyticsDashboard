@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { getChampionshipStandings, getCurrentYear } from '../services/openf1Service';
+import { getChampionshipStandings } from '../services/openf1Service';
 import Loader from '../components/ui/Loader';
 import GraficaPuntos from '../components/estadisticas/GraficaPuntos';
 import { Shield, Users, TrendingUp } from 'lucide-react';
+import { useYear } from '../contexts/YearContext';
 
 /**
  * Página de Equipos - Muestra equipos agrupados por pilotos
@@ -11,7 +12,7 @@ import { Shield, Users, TrendingUp } from 'lucide-react';
 const Equipos = () => {
   const [equipos, setEquipos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const currentYear = getCurrentYear();
+  const { selectedYear } = useYear();
 
   useEffect(() => {
     const cargarEquipos = async () => {
@@ -46,7 +47,7 @@ const Equipos = () => {
     };
 
     cargarEquipos();
-  }, []);
+  }, [selectedYear]);
 
   // Datos reales para comparación de equipos
   const datosComparacion = equipos
@@ -75,7 +76,7 @@ const Equipos = () => {
       >
         <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
           Equipos
-          <span className="text-f1-red font-bold ml-3">{currentYear}</span>
+          <span className="text-f1-red font-bold ml-3">Temporada {selectedYear}</span>
         </h1>
         <p className="text-white/60 text-lg">
           Análisis de constructores y sus pilotos
@@ -92,7 +93,7 @@ const Equipos = () => {
         <GraficaPuntos
           datos={datosComparacion}
           tipo="barra"
-          titulo="Comparativa de Puntos por Equipo - Temporada 2025"
+          titulo={`Comparativa de Puntos por Equipo - Temporada ${selectedYear}`}
         />
       </motion.div>
 
@@ -210,7 +211,7 @@ const Equipos = () => {
       >
         <p className="text-white/60 text-sm">
           <strong className="text-white">Datos actualizados:</strong> Los puntos mostrados son calculados en tiempo real 
-          basados en los resultados de las carreras de la temporada 2025.
+          basados en los resultados de las carreras de la temporada {selectedYear}.
         </p>
       </motion.div>
     </div>

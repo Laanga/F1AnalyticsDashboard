@@ -3,14 +3,15 @@ import { getCachedData, setCachedData } from '../utils/cache.js';
 import { getDrivers } from './driversService.js';
 import { getSessions, getMeetings } from './sessionsService.js';
 import { getDriverStandingsFromErgast, getConstructorStandingsFromErgast } from './standingsService.js';
+import { getSelectedYear } from '../../hooks/useSelectedYear.js';
 
 /**
  * Servicio para estadísticas y análisis de datos
  */
 
 export const getStatistics = async () => {
-  const currentYear = getCurrentYear();
-  const cacheKey = `statistics_${currentYear}`;
+  const selectedYear = getSelectedYear();
+  const cacheKey = `statistics_${selectedYear}`;
   
   const cachedData = getCachedData(cacheKey);
   if (cachedData) {
@@ -33,7 +34,7 @@ export const getStatistics = async () => {
       getConstructorStandingsFromErgast()
     ]);
 
-    const totalRaces = getTotalRacesForYear(currentYear);
+    const totalRaces = getTotalRacesForYear(selectedYear);
     const completedRaces = sessions.filter(session => 
       session.session_name === 'Race' && 
       new Date(session.date_start) < new Date()
@@ -79,7 +80,7 @@ export const getStatistics = async () => {
     console.error('❌ Error al generar estadísticas:', error.message);
     return {
       totalDrivers: 0,
-      totalRaces: getTotalRacesForYear(currentYear),
+      totalRaces: getTotalRacesForYear(selectedYear),
       completedRaces: 0,
       upcomingMeetings: [],
       dataSource: 'error',
@@ -94,8 +95,8 @@ export const getStatistics = async () => {
 };
 
 export const getSeasonProgress = async () => {
-  const currentYear = getCurrentYear();
-  const cacheKey = `season_progress_${currentYear}`;
+  const selectedYear = getSelectedYear();
+  const cacheKey = `season_progress_${selectedYear}`;
   
   const cachedData = getCachedData(cacheKey);
   if (cachedData) {
@@ -106,7 +107,7 @@ export const getSeasonProgress = async () => {
     console.log('📈 Calculando progreso de temporada...');
     
     const sessions = await getSessions('Race');
-    const totalRaces = getTotalRacesForYear(currentYear);
+    const totalRaces = getTotalRacesForYear(selectedYear);
     const completedRaces = sessions.filter(session => 
       new Date(session.date_start) < new Date()
     ).length;
@@ -125,9 +126,9 @@ export const getSeasonProgress = async () => {
   } catch (error) {
     console.error('❌ Error al calcular progreso:', error.message);
     return {
-      totalRaces: getTotalRacesForYear(currentYear),
+      totalRaces: getTotalRacesForYear(selectedYear),
       completedRaces: 0,
-      remainingRaces: getTotalRacesForYear(currentYear),
+      remainingRaces: getTotalRacesForYear(selectedYear),
       progressPercentage: 0
     };
   }
