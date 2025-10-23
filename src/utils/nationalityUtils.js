@@ -78,7 +78,7 @@ export const translateNationality = (nationality) => {
     'Bahraini': 'Bahreiní',
     
     // Otros casos especiales
-    'Monégasque': 'Monegasco',
+    'Monegasque': 'Monegasco',
     'Liechtensteiner': 'Liechtensteiniano',
     'Luxembourgish': 'Luxemburgués',
     'Maltese': 'Maltés',

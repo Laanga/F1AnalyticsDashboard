@@ -1,4 +1,4 @@
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import { motion } from 'framer-motion';
 
 /**
@@ -68,10 +68,16 @@ const GraficaPuntos = ({ datos = [], tipo = 'linea', titulo = 'Gráfica' }) => {
             />
             <Bar 
               dataKey="value" 
-              fill="#e10600" 
               radius={[8, 8, 0, 0]}
               animationDuration={800}
-            />
+            >
+              {datos.map((entry, index) => (
+                <Cell 
+                  key={`cell-${index}`} 
+                  fill={entry.color || "#e10600"} 
+                />
+              ))}
+            </Bar>
           </BarChart>
         ) : (
           <LineChart data={datos}>

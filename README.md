@@ -1,7 +1,6 @@
-# 🏎️ F1 Stats Dashboard
+# 🏎️ F1 Data Explorer
 
-**F1 Stats Dashboard** es una aplicación web moderna inspirada en el diseño *Liquid Glass* de Apple, con una estética basada en los colores clásicos de la Fórmula 1 — negro, rojo y transparencias elegantes.
-Permite explorar datos de pilotos, escuderías y carreras a través de gráficos interactivos y visualizaciones limpias.
+**F1 Data Explorer** es una aplicación web moderna que combina datos en tiempo real de la Fórmula 1 con un diseño elegante inspirado en el estilo *Liquid Glass* de Apple. La aplicación presenta una estética sofisticada basada en los colores clásicos de la F1 — negro, rojo y transparencias elegantes — permitiendo explorar estadísticas de pilotos, equipos y carreras a través de visualizaciones interactivas y gráficos dinámicos.
 
 ---
 
@@ -10,104 +9,142 @@ Permite explorar datos de pilotos, escuderías y carreras a través de gráficos
 | Categoría          | Herramienta                                               |
 | ------------------ | --------------------------------------------------------- |
 | **Frontend**       | [React](https://react.dev/) + [Vite](https://vitejs.dev/) |
-| **API de datos**   | [OpenF1](https://openf1.org/)                             |
+| **APIs de datos** | [OpenF1](https://openf1.org/) + [Ergast F1 API](http://ergast.com/mrd/) |
 | **Gráficos**       | [Recharts](https://recharts.org/en-US/)                   |
 | **Estilos**        | [Tailwind CSS](https://tailwindcss.com/)                  |
-| **Despliegue**     | [Vercel](https://vercel.com/)                             |
+| **Animaciones**    | [Animate.css](https://animate.style/) + [Framer Motion](https://www.framer.com/motion/) |
 
 ---
 
 ## ✨ Características principales
 
-* 🏁 **Panel de control F1** con datos en tiempo real de pilotos, equipos y carreras.
-* 📊 **Visualizaciones interactivas** (gráficos de velocidad, puntos, posiciones, etc.).
-* 🧊 **Diseño Liquid Glass**: transparencias suaves, bordes redondeados, sombras sutiles y fondo difuminado.
-* 🌙 **Modo oscuro predeterminado** con acentos en rojo F1.
-* 📱 **Responsive design** optimizado para móvil, tablet y escritorio.
-* ⚡ **Datos actualizados** directamente desde la API oficial de OpenF1.
+* 🏁 **Explorador completo de F1** con datos actualizados de pilotos, equipos y estadísticas de temporada.
+* 👤 **Perfiles detallados de pilotos** con fotos oficiales, estadísticas y información de equipos.
+* 🏆 **Clasificaciones en tiempo real** de pilotos y constructores con puntuaciones actualizadas.
+* 📊 **Gráficos interactivos** para análisis de rendimiento, puntos y comparativas.
+* 🧊 **Diseño Liquid Glass**: transparencias elegantes, efectos de cristal y animaciones fluidas.
+* 🌙 **Interfaz oscura premium** con acentos en rojo F1 y efectos de iluminación.
+* 📱 **Totalmente responsive** optimizado para todos los dispositivos.
+* ⚡ **Datos híbridos** combinando OpenF1 (fotos y datos actuales) con Ergast (datos históricos).
 
 ---
 
-## 💻 Instalación local
+## 💻 Instalación y desarrollo
 
-1. Clona el repositorio:
+### Prerrequisitos
+- Node.js 18+ 
+- npm o yarn
 
+### Pasos de instalación
+
+1. **Clona el repositorio:**
    ```bash
-   git clone https://github.com/tuusuario/f1-stats-dashboard.git
-   cd f1-stats-dashboard
+   git clone https://github.com/tuusuario/f1-data-explorer.git
+cd f1-data-explorer
    ```
 
-2. Instala las dependencias:
-
+2. **Instala las dependencias:**
    ```bash
    npm install
    ```
 
-3. Ejecuta el proyecto:
-
+3. **Inicia el servidor de desarrollo:**
    ```bash
    npm run dev
    ```
 
-4. Abre tu navegador en `http://localhost:3000`
+4. **Abre tu navegador en:** `http://localhost:3000`
+
+### Scripts disponibles
+- `npm run dev` - Servidor de desarrollo
+- `npm run build` - Build de producción
+- `npm run preview` - Preview del build
+- `npm run lint` - Linting del código
 
 ---
 
 ## 🧩 Estructura del proyecto
 
 ```
-f1-stats-dashboard/
+F1DataExplorer/
 │
 ├── src/
-│   ├── components/      # Componentes reutilizables (Navbar, Cards, Charts...)
-│   ├── pages/           # Páginas principales (Inicio, Pilotos, Equipos...)
-│   ├── services/        # Integración con OpenF1 API
-│   ├── styles/          # Estilos globales
-│   └── App.jsx          # Punto de entrada
+│   ├── components/          # Componentes reutilizables
+│   │   ├── equipos/        # Componentes específicos de equipos
+│   │   ├── estadisticas/   # Componentes de gráficos y stats
+│   │   ├── layout/         # Layout y navegación
+│   │   ├── pilotos/        # Componentes de pilotos
+│   │   └── ui/             # Componentes UI base
+│   ├── contexts/           # Contextos de React (Year, etc.)
+│   ├── hooks/              # Custom hooks
+│   ├── pages/              # Páginas principales
+│   │   ├── Inicio.jsx      # Página principal
+│   │   ├── Pilotos.jsx     # Página de pilotos
+│   │   ├── Equipos.jsx     # Página de equipos
+│   │   ├── Estadisticas.jsx # Análisis y gráficos
+│   │   └── Carreras.jsx    # Información de carreras
+│   ├── services/           # Servicios de API
+│   │   ├── api/            # Servicios específicos
+│   │   ├── config/         # Configuración de APIs
+│   │   └── utils/          # Utilidades de servicios
+│   ├── utils/              # Utilidades generales
+│   └── styles/             # Estilos globales
 │
-├── public/
+├── public/                 # Assets estáticos
 └── README.md
 ```
 
 ---
 
-## 🎨 Inspiración de diseño
+## 🎨 Filosofía de diseño
 
-El estilo visual sigue la filosofía **Apple Liquid Glass**, con:
+El estilo visual está inspirado en la filosofía **Apple Liquid Glass**, implementando:
 
-* Fondos translúcidos y difuminados (*backdrop-blur*).
-* Sombras suaves y brillos sutiles.
-* Tipografía moderna y espaciosa.
-* Contrastes elegantes entre negro, gris humo y acentos en rojo F1.
+* **Transparencias elegantes** con efectos de cristal y *backdrop-blur*
+* **Sombras dinámicas** y brillos sutiles que responden a la interacción
+* **Tipografía premium** con espaciado cuidadoso y jerarquía clara
+* **Paleta sofisticada** combinando negro profundo, grises elegantes y rojo F1 icónico
+* **Animaciones fluidas** que mejoran la experiencia sin distraer
+* **Microinteracciones** que proporcionan feedback inmediato
 
-> 💡 "Minimalismo, velocidad y precisión — igual que en la F1."
-
----
-
-## 📦 Despliegue
-
-Puedes desplegar el proyecto fácilmente en [Vercel](https://vercel.com/) con un clic:
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new)
+> 💡 *"Minimalismo, velocidad y precisión — los mismos principios que rigen la Fórmula 1."*
 
 ---
 
-## 🧠 Futuras mejoras
+## 🔮 Roadmap y futuras mejoras
 
-* 🏎️ Expandir análisis con más endpoints de OpenF1 (telemetría, radio, clima).
-* ⚙️ Añadir backend propio en **FastAPI (Python)** para análisis avanzados.
-* 🧮 Mostrar estadísticas predictivas (estrategias, desgaste, etc.).
-* 📈 Comparativas históricas entre temporadas.
-* 🎯 Filtros avanzados y búsqueda personalizada.
+### 🚀 Próximas funcionalidades
+* 🏎️ **Telemetría avanzada** - Datos de velocidad, RPM y G-forces en tiempo real
+* 🌦️ **Condiciones climáticas** - Impacto del clima en el rendimiento
+* 📻 **Radio de equipos** - Comunicaciones entre pilotos y boxes
+* 🔄 **Comparativas históricas** - Análisis entre diferentes temporadas
+* 🎯 **Filtros inteligentes** - Búsqueda y filtrado avanzado de datos
+
+### 🛠️ Mejoras técnicas
+* ⚙️ **Backend personalizado** con FastAPI para análisis predictivos
+* 🧮 **Machine Learning** para predicciones de estrategia y rendimiento
+* 📱 **PWA** - Aplicación web progresiva para uso offline
+* 🔔 **Notificaciones** - Alertas en tiempo real de eventos importantes
+* 🌐 **Internacionalización** - Soporte multiidioma
 
 ---
 
-## 👨‍💻 Autor
+## 🤝 Contribuciones
 
-**Álvaro Langa**
-Desarrollador Web & Motorsport Data Enthusiast 🏁
-[💼 LinkedIn](https://linkedin.com/in/tu-perfil) | [📧 Contacto](mailto:tuemail@gmail.com)
+Las contribuciones son bienvenidas. Para cambios importantes:
+
+1. Fork el proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
 
 ---
 
-⭐ **Si te gusta este proyecto, deja una estrella en GitHub para apoyar el desarrollo.**
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
+
+---
+
+⭐ **Si este proyecto te resulta útil, considera darle una estrella en GitHub para apoyar su desarrollo.**

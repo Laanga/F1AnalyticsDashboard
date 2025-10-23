@@ -6,7 +6,7 @@ import { getSeasonProgress, getCurrentYear } from '../services/openf1Service';
 import { useYear } from '../contexts/YearContext';
 
 /**
- * Página de inicio - Hero con presentación del dashboard
+ * Página de inicio - Hero con presentación de la aplicación
  */
 const Inicio = () => {
   const navigate = useNavigate();
@@ -104,10 +104,10 @@ const Inicio = () => {
             transition={{ delay: 0.3, duration: 0.8 }}
             className="text-6xl md:text-7xl lg:text-8xl font-bold text-white mb-4 leading-tight"
           >
-            F1 Analytics
+            F1 Data
             <br />
             <span className="text-f1-red font-bold">
-              Dashboard
+              Explorer
             </span>
           </motion.h1>
 

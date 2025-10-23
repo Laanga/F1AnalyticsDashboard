@@ -2,6 +2,7 @@ import axios from 'axios';
 import { API_CONFIG, getCurrentYear } from '../config/apiConfig.js';
 import { getCachedData, setCachedData } from '../utils/cache.js';
 import { getSelectedYear } from '../../hooks/useSelectedYear.js';
+import { getTeamColor } from '../../utils/formatUtils.js';
 
 /**
  * Servicio para operaciones relacionadas con clasificaciones y standings
@@ -69,16 +70,21 @@ export const getConstructorStandingsFromErgast = async () => {
     if (response.data?.MRData?.StandingsTable?.StandingsLists?.[0]?.ConstructorStandings) {
       const standings = response.data.MRData.StandingsTable.StandingsLists[0].ConstructorStandings;
       
-      const processedStandings = standings.map(standing => ({
-        position: parseInt(standing.position),
-        points: parseFloat(standing.points),
-        wins: parseInt(standing.wins),
-        constructor: {
-          constructorId: standing.Constructor.constructorId,
-          name: standing.Constructor.name,
-          nationality: standing.Constructor.nationality
-        }
-      }));
+      const processedStandings = standings.map(standing => {
+        const constructorData = {
+          position: parseInt(standing.position),
+          points: parseFloat(standing.points),
+          wins: parseInt(standing.wins),
+          constructor: {
+            constructorId: standing.Constructor.constructorId,
+            name: standing.Constructor.name,
+            nationality: standing.Constructor.nationality
+          }
+        };
+
+        console.log('Constructor data:', standing.Constructor.name, '-> color:', getTeamColor(standing.Constructor.name));
+        return constructorData;
+      });
 
       setCachedData(cacheKey, processedStandings);
       console.log(`✅ ${processedStandings.length} clasificaciones de constructores obtenidas desde Ergast`);
@@ -152,7 +158,7 @@ export const getChampionshipStandings = async () => {
 
         return {
           team_name: constructor.constructor.name,
-          team_colour: '#e10600', // Color por defecto
+          team_colour: getTeamColor(constructor.constructor.name), // Color específico del equipo
           points: constructor.points,
           position: constructor.position,
           wins: constructor.wins,
@@ -162,7 +168,9 @@ export const getChampionshipStandings = async () => {
             name_acronym: driver.driver.code,
             points: driver.points,
             position: driver.position,
-            wins: driver.wins
+            wins: driver.wins,
+            team_name: constructor.constructor.name,
+            team_colour: getTeamColor(constructor.constructor.name) // Agregar color del equipo a los pilotos
           }))
         };
       });
@@ -176,7 +184,8 @@ export const getChampionshipStandings = async () => {
           points: driver.points,
           position: driver.position,
           wins: driver.wins,
-          team_name: driver.constructor.name
+          team_name: driver.constructor.name,
+          team_colour: getTeamColor(driver.constructor.name) // Agregar color del equipo
         }))
       };
 
