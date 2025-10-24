@@ -1,6 +1,6 @@
 # 🏎️ F1 Data Explorer
 
-**F1 Data Explorer** es una aplicación web moderna que combina datos en tiempo real de la Fórmula 1 con un diseño elegante inspirado en el estilo *Liquid Glass* de Apple. La aplicación presenta una estética sofisticada basada en los colores clásicos de la F1 — negro, rojo y transparencias elegantes — permitiendo explorar estadísticas de pilotos, equipos y carreras a través de visualizaciones interactivas y gráficos dinámicos.
+**F1 Data Explorer** es una aplicación web moderna que combina datos oficiales y actualizados de la Fórmula 1 con un diseño elegante inspirado en el estilo *Liquid Glass* de Apple. La aplicación presenta una estética sofisticada basada en los colores clásicos de la F1 — negro, rojo y transparencias elegantes — permitiendo explorar estadísticas de pilotos, equipos y carreras a través de visualizaciones interactivas y gráficos dinámicos.
 
 ---
 
@@ -19,13 +19,15 @@
 ## ✨ Características principales
 
 * 🏁 **Explorador completo de F1** con datos actualizados de pilotos, equipos y estadísticas de temporada.
+* 📅 **Selector de temporada** y progreso del año para navegar entre temporadas.
 * 👤 **Perfiles detallados de pilotos** con fotos oficiales, estadísticas y información de equipos.
-* 🏆 **Clasificaciones en tiempo real** de pilotos y constructores con puntuaciones actualizadas.
+* 🏆 **Clasificaciones de temporada** de pilotos y constructores de la temporada seleccionada.
+* 🗓️ **Calendario de carreras** con próximas y completadas, detalles de circuito y fechas.
 * 📊 **Gráficos interactivos** para análisis de rendimiento, puntos y comparativas.
 * 🧊 **Diseño Liquid Glass**: transparencias elegantes, efectos de cristal y animaciones fluidas.
 * 🌙 **Interfaz oscura premium** con acentos en rojo F1 y efectos de iluminación.
 * 📱 **Totalmente responsive** optimizado para todos los dispositivos.
-* ⚡ **Datos híbridos** combinando OpenF1 (fotos y datos actuales) con Ergast (datos históricos).
+* ⚡ **Integración de datos** combinando OpenF1 (fotos y datos actuales) con Ergast (datos históricos).
 
 ---
 
@@ -111,23 +113,7 @@ El estilo visual está inspirado en la filosofía **Apple Liquid Glass**, implem
 
 ---
 
-## 🔮 Roadmap y futuras mejoras
 
-### 🚀 Próximas funcionalidades
-* 🏎️ **Telemetría avanzada** - Datos de velocidad, RPM y G-forces en tiempo real
-* 🌦️ **Condiciones climáticas** - Impacto del clima en el rendimiento
-* 📻 **Radio de equipos** - Comunicaciones entre pilotos y boxes
-* 🔄 **Comparativas históricas** - Análisis entre diferentes temporadas
-* 🎯 **Filtros inteligentes** - Búsqueda y filtrado avanzado de datos
-
-### 🛠️ Mejoras técnicas
-* ⚙️ **Backend personalizado** con FastAPI para análisis predictivos
-* 🧮 **Machine Learning** para predicciones de estrategia y rendimiento
-* 📱 **PWA** - Aplicación web progresiva para uso offline
-* 🔔 **Notificaciones** - Alertas en tiempo real de eventos importantes
-* 🌐 **Internacionalización** - Soporte multiidioma
-
----
 
 ## 🤝 Contribuciones
 
