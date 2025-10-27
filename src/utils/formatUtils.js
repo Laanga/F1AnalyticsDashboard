@@ -229,3 +229,57 @@ export const getTeamLogo = (teamName) => {
   // Logo por defecto si no se encuentra
   return '/teams/default.png';
 };
+
+/**
+ * Obtiene la ruta de la foto local del piloto
+ * Usa imágenes de /public/drivers en lugar de la API
+ * @param {Object} driver - Objeto del piloto (de OpenF1)
+ * @returns {string|null} Ruta de la imagen (o null si no hay mapeo)
+ */
+export const getDriverPhoto = (driver) => {
+  if (!driver) return null;
+  // Determinar apellido/slug probable
+  const lastName =
+    (driver.last_name || driver.familyName || '') ||
+    (driver.full_name ? driver.full_name.split(' ').slice(-1)[0] : '') ||
+    '';
+  const key = lastName.toLowerCase();
+
+  // Mapeo de apellidos a archivos locales
+  const photoMappings = {
+    albon: '/drivers/Z9VKbziBA97Gig6j_2025-albon.avif',
+    alonso: '/drivers/Z9VKcDiBA97Gig6k_2025-alonso.avif',
+    antonelli: '/drivers/Z9VKcTiBA97Gig6l_2025-antonelli.avif',
+    bearman: '/drivers/Z9VKcjiBA97Gig6m_2025-bearman.avif',
+    bortoleto: '/drivers/Z9VKcziBA97Gig6n_2025-bortoleto.avif',
+    doohan: '/drivers/Z9VKdDiBA97Gig6o_2025-doohan.avif',
+    gasly: '/drivers/Z9VKdTiBA97Gig6p_2025-gasly.avif',
+    hadjar: '/drivers/Z9VKdjiBA97Gig6q_2025-hadjar.avif',
+    hamilton: '/drivers/Z9VKdziBA97Gig6r_2025-hamilton.avif',
+    hulkenberg: '/drivers/Z9VKeDiBA97Gig6s_2025-hulkenberg.avif',
+    leclerc: '/drivers/Z9VKejiBA97Gig6u_2025-leclerc.avif',
+    norris: '/drivers/Z9VKeziBA97Gig6v_2025-norris.avif',
+    ocon: '/drivers/Z9VKfDiBA97Gig6w_2025-ocon.avif',
+    piastri: '/drivers/Z9VKfTiBA97Gig6x_2025-piastri.avif',
+    russell: '/drivers/Z9VKfjiBA97Gig6y_2025-russell.avif',
+    sainz: '/drivers/Z9VKfziBA97Gig6z_2025-sainz.avif',
+    stroll: '/drivers/Z9VKgDiBA97Gig60_2025-stroll.avif',
+    verstappen: '/drivers/Z9VKgjiBA97Gig62_2025-verstappen.avif',
+    colapinto: '/drivers/aCOy_ydWJ-7kSCnB_2025-colapinto.avif',
+    lawson: '/drivers/Z_J86HdAxsiBwXP1_2025-lawson-RB.avif',
+    tsunoda: '/drivers/Z_J86XdAxsiBwXP2_2025-tsunoda-RBR.avif',
+  };
+
+  if (photoMappings[key]) return photoMappings[key];
+
+  // Si no se encuentra por apellido, intentar con nombre completo
+  if (driver.full_name) {
+    const nameLower = driver.full_name.toLowerCase();
+    for (const [slug, path] of Object.entries(photoMappings)) {
+      if (nameLower.includes(slug)) return path;
+    }
+  }
+
+  // Fallback: mantener headshot_url si existe; si no, null
+  return driver.headshot_url || null;
+};

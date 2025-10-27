@@ -2,13 +2,13 @@ import { motion } from 'framer-motion';
 import { User, Flag } from 'lucide-react';
 import { getDriverNationality } from '../../utils/nationalityUtils';
 import { getDriverFlag } from '../../utils/flagUtils.jsx';
-import { getTeamLogo } from '../../utils/formatUtils';
+import { getTeamLogo, getDriverPhoto } from '../../utils/formatUtils';
 
 const CardPiloto = ({ piloto, onClick }) => {
   const nacionalidad = getDriverNationality(piloto);
   const iniciales = piloto.name_acronym || 
     (piloto.full_name ? piloto.full_name.split(' ').map(n => n[0]).join('').substring(0, 3) : '???');
-  const fotoUrl = piloto.headshot_url;
+  const fotoUrl = getDriverPhoto(piloto) || piloto.headshot_url;
   const banderaUrl = getDriverFlag(piloto);
 
   // Función para convertir color hex a RGB
