@@ -67,7 +67,7 @@ export const getCurrentF1Season = () => {
   // (dependiendo de cuándo termine la temporada anterior)
   if (currentMonth <= 2) {
     // Verificar si hay datos del año actual, si no, usar el año anterior
-    return currentYear;
+    return currentYear - 1;
   }
   
   return currentYear;

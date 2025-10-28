@@ -9,7 +9,7 @@ import { clearCache } from './utils/cache.js';
 import { getDrivers, getDriverByNumber, getDriversFromErgast } from './api/driversService.js';
 import { getSessions, getRaces, getLatestSession, getMeetings, getPositions, getLaps, getFutureRacesFromErgast, getFutureMeetingsFromErgast } from './api/sessionsService.js';
 import { getDriverStandings, getConstructorStandings, getDriverStandingsFromErgast, getConstructorStandingsFromErgast, getChampionshipStandings } from './api/standingsService.js';
-import { getStatistics, getSeasonProgress } from './api/statisticsService.js';
+import { getStatistics, getSeasonProgress, getPointsEvolution } from './api/statisticsService.js';
 import { getRaceResults, getSessionDrivers, getCompleteRaceResults } from './api/raceResultsService.js';
 import { getMeetingSessions, getSessionResults, getCompleteMeetingResults, categorizeSessionsByType } from './api/meetingSessionsService.js';
 
@@ -48,7 +48,8 @@ export {
 // Servicios de estadísticas
 export { 
   getStatistics, 
-  getSeasonProgress 
+  getSeasonProgress,
+  getPointsEvolution 
 } from './api/statisticsService.js';
 
 // Servicios de resultados de carreras
@@ -97,6 +98,7 @@ export default {
   // Estadísticas
   getStatistics,
   getSeasonProgress,
+  getPointsEvolution,
   
   // Resultados de carreras
   getRaceResults,

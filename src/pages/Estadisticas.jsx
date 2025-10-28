@@ -1,39 +1,41 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { getStatistics, getChampionshipStandings } from '../services/openf1Service';
+import { Trophy, Users, Flag, BarChart3, Zap, TrendingUp } from 'lucide-react';
+import { getDriverStandingsFromErgast, getConstructorStandingsFromErgast, getCurrentYear, getStatistics, getChampionshipStandings, getPointsEvolution } from '../services/openf1Service';
+import { getChartColor, assignColorsToData, DRIVER_COLORS, getTeamColor, getDriverTeamColor, assignTeamColorsToDrivers } from '../utils/chartColors';
 import { useYear } from '../contexts/YearContext';
-import Loader from '../components/ui/Loader';
 import GraficaPuntos from '../components/estadisticas/GraficaPuntos';
 import PanelEstadisticas from '../components/estadisticas/PanelEstadisticas';
 import ClasificacionConstructores from '../components/estadisticas/ClasificacionConstructores';
-import { getTeamColor } from '../utils/formatUtils';
-import { TrendingUp, Users, Flag, BarChart3, Trophy, Zap } from 'lucide-react';
+import Loader from '../components/ui/Loader';
 
 /**
  * Página de Estadísticas - Vista general del campeonato
  */
 const Estadisticas = () => {
-  const [stats, setStats] = useState(null);
+  const [stats, setStats] = useState({});
   const [equipos, setEquipos] = useState([]);
+  const [evolutionData, setEvolutionData] = useState({ evolutionData: [], lineConfig: [], totalRaces: 0 });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { selectedYear } = useYear();
 
   useEffect(() => {
     const cargarEstadisticas = async () => {
       try {
         setLoading(true);
-        const [statsData, standingsData] = await Promise.all([
+        const [estadisticas, equiposData, evolucionData] = await Promise.all([
           getStatistics(),
-          getChampionshipStandings()
+          getChampionshipStandings('constructors'),
+          getPointsEvolution(3)
         ]);
         
-        setStats(statsData);
-        setEquipos(standingsData.constructors || []);
-        
-        console.log('📊 Estadísticas cargadas:', statsData.dataSource === 'real' ? 'DATOS REALES' : 'DATOS BASE');
-        console.log('🏎️ Equipos cargados:', standingsData.constructors?.length || 0);
+        setStats(estadisticas);
+        setEquipos(equiposData);
+        setEvolutionData(evolucionData);
       } catch (error) {
         console.error('Error al cargar estadísticas:', error);
+        setError('Error al cargar las estadísticas');
       } finally {
         setLoading(false);
       }
@@ -61,21 +63,34 @@ const Estadisticas = () => {
   }
 
   // Preparar datos para gráfica de top pilotos (datos reales)
-  const topPilotos = stats.topDrivers.slice(0, 8).map((piloto) => ({
+  const topPilotos = stats.topDrivers.slice(0, 8).map((piloto, index) => ({
     name: piloto.driver?.code || piloto.driver?.familyName || 'Piloto',
     value: parseInt(piloto.points) || 0, // Datos reales de la API
+    color: getDriverTeamColor(piloto), // Color del equipo del piloto
+    teamName: piloto.constructor?.name || 'Equipo', // Nombre del equipo para referencia
   }));
 
-  // Preparar datos de evolución basados en el líder actual
-  const leaderPoints = stats.championshipLeader?.points || 0;
-  const completedRaces = stats.completedRaces || 1;
-  const datosEvolucion = Array.from({ length: Math.min(completedRaces, 10) }, (_, i) => ({
-    name: `Ronda ${i + 1}`,
-    value: Math.round((leaderPoints / completedRaces) * (i + 1))
-  }));
+  // Usar datos de evolución detallados de todas las carreras
+  const datosEvolucion = evolutionData.evolutionData || [];
+  
+  // Configuración de líneas para el gráfico de evolución con colores de equipo
+  const lineasEvolucion = evolutionData.lineConfig
+    .map((piloto, index) => ({
+      dataKey: piloto.dataKey,
+      name: piloto.name,
+      color: getDriverTeamColor({ 
+        driver: { code: piloto.name, familyName: piloto.name },
+        constructor: { name: piloto.teamName }
+      }),
+      strokeWidth: 4, // Líneas más gruesas para mejor visibilidad
+      teamName: piloto.teamName,
+      fullName: piloto.fullName,
+      points: piloto.points,
+      position: piloto.position
+    }));
 
   // Preparar datos para gráfica de equipos (datos reales)
-  const datosEquipos = equipos
+  const datosEquipos = (equipos?.constructors || [])
     .sort((a, b) => (b.points || 0) - (a.points || 0)) // Ordenar por puntos descendente
     .slice(0, 10) // Top 10 equipos
     .map(equipo => ({
@@ -141,13 +156,88 @@ const Estadisticas = () => {
         />
       </div>
 
-      {/* Gráficas principales */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-10">
+      {/* Gráfico de Evolución de Puntos - Sección Principal */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="mb-10"
+      >
+        <div className="bg-gradient-to-br from-f1-dark/80 to-gray-900/80 backdrop-blur-md rounded-2xl border border-gray-700/50 overflow-hidden">
+          {/* Header del gráfico */}
+          <div className="p-8 pb-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-3xl font-bold text-white flex items-center gap-3">
+                 <TrendingUp className="w-8 h-8 text-f1-red" />
+                 Evolución de Puntos - Top 3 Pilotos
+               </h2>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                  <span className="text-sm text-gray-400 font-medium">
+                    {evolutionData.racesWithResults || 0} con resultados
+                  </span>
+                </div>
+                {evolutionData.futureRacesShown > 0 && (
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-blue-400"></div>
+                    <span className="text-sm text-gray-400 font-medium">
+                      {evolutionData.futureRacesShown} próximas
+                    </span>
+                  </div>
+                )}
+                <div className="text-xs text-gray-500">
+                  ({evolutionData.racesShown || 0} de {evolutionData.totalRaces || 0} mostradas)
+                </div>
+              </div>
+            </div>
+            <p className="text-gray-400 text-lg mb-6">
+              Progresión de puntos a lo largo de la temporada {selectedYear}
+            </p>
+            
+            {/* Leyenda de pilotos */}
+            {lineasEvolucion.length > 0 && (
+              <div className="flex flex-wrap gap-6 mb-6">
+                {lineasEvolucion.map((linea, index) => (
+                  <div key={linea.dataKey} className="flex items-center gap-3">
+                    <div 
+                      className="w-4 h-4 rounded-full"
+                      style={{ backgroundColor: linea.color }}
+                    ></div>
+                    <span className="text-white text-lg font-semibold">
+                      {linea.fullName || linea.name}
+                    </span>
+                    <span className="text-gray-400 text-sm font-medium">
+                      ({linea.points} pts)
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          {/* Gráfico */}
+          <div className="px-8 pb-8">
+            <div className="h-96">
+              <GraficaPuntos
+                datos={datosEvolucion}
+                tipo="linea"
+                titulo=""
+                lineas={lineasEvolucion}
+                showTitle={false}
+              />
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Gráficas secundarias */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
         {/* Top pilotos */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.5 }}
         >
           <GraficaPuntos
             datos={topPilotos}
@@ -156,25 +246,11 @@ const Estadisticas = () => {
           />
         </motion.div>
 
-        {/* Evolución de puntos */}
+        {/* Comparativa de equipos */}
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <GraficaPuntos
-            datos={datosEvolucion}
-            tipo="linea"
-            titulo="Evolución de Puntos del Líder"
-          />
-        </motion.div>
-
-        {/* Comparativa de equipos */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="xl:col-span-1 lg:col-span-2"
         >
           <GraficaPuntos
             datos={datosEquipos}
