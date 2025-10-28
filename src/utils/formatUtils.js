@@ -238,13 +238,7 @@ export const getTeamLogo = (teamName) => {
  */
 export const getDriverPhoto = (driver) => {
   if (!driver) return null;
-  // Determinar apellido/slug probable
-  const lastName =
-    (driver.last_name || driver.familyName || '') ||
-    (driver.full_name ? driver.full_name.split(' ').slice(-1)[0] : '') ||
-    '';
-  const key = lastName.toLowerCase();
-
+  
   // Mapeo de apellidos a archivos locales
   const photoMappings = {
     albon: '/drivers/Z9VKbziBA97Gig6j_2025-albon.avif',
@@ -270,13 +264,62 @@ export const getDriverPhoto = (driver) => {
     tsunoda: '/drivers/Z_J86XdAxsiBwXP2_2025-tsunoda-RBR.avif',
   };
 
-  if (photoMappings[key]) return photoMappings[key];
+  // Intentar múltiples formas de obtener el apellido
+  const possibleLastNames = [
+    driver.last_name,
+    driver.familyName,
+    driver.full_name ? driver.full_name.split(' ').slice(-1)[0] : null,
+    driver.name_acronym ? driver.name_acronym.toLowerCase() : null
+  ].filter(Boolean);
 
-  // Si no se encuentra por apellido, intentar con nombre completo
+  // Buscar por apellido exacto
+  for (const lastName of possibleLastNames) {
+    const key = lastName.toLowerCase();
+    if (photoMappings[key]) {
+      return photoMappings[key];
+    }
+  }
+
+  // Buscar por nombre completo (contiene)
   if (driver.full_name) {
     const nameLower = driver.full_name.toLowerCase();
     for (const [slug, path] of Object.entries(photoMappings)) {
-      if (nameLower.includes(slug)) return path;
+      if (nameLower.includes(slug)) {
+        return path;
+      }
+    }
+  }
+
+  // Buscar por acrónimo de nombre (ej: VER -> verstappen)
+  if (driver.name_acronym) {
+    const acronym = driver.name_acronym.toLowerCase();
+    const acronymMappings = {
+      'ver': 'verstappen',
+      'ham': 'hamilton',
+      'lec': 'leclerc',
+      'nor': 'norris',
+      'rus': 'russell',
+      'sai': 'sainz',
+      'alb': 'albon',
+      'alo': 'alonso',
+      'gas': 'gasly',
+      'oco': 'ocon',
+      'pia': 'piastri',
+      'str': 'stroll',
+      'hul': 'hulkenberg',
+      'tsu': 'tsunoda',
+      'law': 'lawson',
+      'col': 'colapinto',
+      'ant': 'antonelli',
+      'bea': 'bearman',
+      'bor': 'bortoleto',
+      'doo': 'doohan',
+      'had': 'hadjar'
+    };
+    
+    const mappedName = acronymMappings[acronym];
+    if (mappedName && photoMappings[mappedName]) {
+      return photoMappings[mappedName];
     }
   }
 

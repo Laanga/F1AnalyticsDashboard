@@ -7,9 +7,11 @@
 import { getCurrentYear } from './config/apiConfig.js';
 import { clearCache } from './utils/cache.js';
 import { getDrivers, getDriverByNumber, getDriversFromErgast } from './api/driversService.js';
-import { getSessions, getRaces, getLatestSession, getMeetings, getPositions, getLaps } from './api/sessionsService.js';
+import { getSessions, getRaces, getLatestSession, getMeetings, getPositions, getLaps, getFutureRacesFromErgast, getFutureMeetingsFromErgast } from './api/sessionsService.js';
 import { getDriverStandings, getConstructorStandings, getDriverStandingsFromErgast, getConstructorStandingsFromErgast, getChampionshipStandings } from './api/standingsService.js';
 import { getStatistics, getSeasonProgress } from './api/statisticsService.js';
+import { getRaceResults, getSessionDrivers, getCompleteRaceResults } from './api/raceResultsService.js';
+import { getMeetingSessions, getSessionResults, getCompleteMeetingResults, categorizeSessionsByType } from './api/meetingSessionsService.js';
 
 // Configuración y utilidades
 export { getCurrentYear } from './config/apiConfig.js';
@@ -29,7 +31,9 @@ export {
   getLatestSession, 
   getMeetings, 
   getPositions, 
-  getLaps 
+  getLaps,
+  getFutureRacesFromErgast,
+  getFutureMeetingsFromErgast 
 } from './api/sessionsService.js';
 
 // Servicios de clasificaciones
@@ -46,6 +50,21 @@ export {
   getStatistics, 
   getSeasonProgress 
 } from './api/statisticsService.js';
+
+// Servicios de resultados de carreras
+export { 
+  getRaceResults, 
+  getSessionDrivers, 
+  getCompleteRaceResults 
+} from './api/raceResultsService.js';
+
+// Servicios de sesiones de meeting
+export { 
+  getMeetingSessions, 
+  getSessionResults, 
+  getCompleteMeetingResults, 
+  categorizeSessionsByType 
+} from './api/meetingSessionsService.js';
 
 // Mantener compatibilidad con el export default anterior
 export default {
@@ -65,6 +84,8 @@ export default {
   getMeetings,
   getPositions,
   getLaps,
+  getFutureRacesFromErgast,
+  getFutureMeetingsFromErgast,
   
   // Clasificaciones
   getDriverStandings,
@@ -75,5 +96,16 @@ export default {
   
   // Estadísticas
   getStatistics,
-  getSeasonProgress
+  getSeasonProgress,
+  
+  // Resultados de carreras
+  getRaceResults,
+  getSessionDrivers,
+  getCompleteRaceResults,
+  
+  // Sesiones de meeting
+  getMeetingSessions,
+  getSessionResults,
+  getCompleteMeetingResults,
+  categorizeSessionsByType
 };

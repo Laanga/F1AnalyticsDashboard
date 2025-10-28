@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { getRaces, getMeetings } from '../services/openf1Service';
 import Loader from '../components/ui/Loader';
+import RaceModal from '../components/ui/RaceModal';
 import { formatearFecha, isCarreraCompletada } from '../utils/dateUtils';
 import { Flag, MapPin, Calendar, Trophy, CheckCircle2, Clock } from 'lucide-react';
 import { useYear } from '../contexts/YearContext';
+import { getTotalRacesForYear } from '../services/config/apiConfig';
 
 /**
  * Página de Carreras - Muestra las carreras de la temporada
@@ -13,7 +15,21 @@ const Carreras = () => {
   const [carreras, setCarreras] = useState([]);
   const [meetings, setMeetings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedRace, setSelectedRace] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { selectedYear } = useYear();
+
+  // Función para abrir el modal con los detalles de una carrera
+  const openRaceModal = (carrera) => {
+    setSelectedRace(carrera);
+    setIsModalOpen(true);
+  };
+
+  // Función para cerrar el modal
+  const closeRaceModal = () => {
+    setIsModalOpen(false);
+    setSelectedRace(null);
+  };
 
   useEffect(() => {
     const cargarCarreras = async () => {
@@ -24,7 +40,13 @@ const Carreras = () => {
           getMeetings(),
         ]);
 
-        setCarreras(sesionesData);
+        // Filtrar carreras por año seleccionado
+        const carrerasFiltradas = sesionesData.filter(carrera => {
+          const carreraYear = new Date(carrera.date_start).getFullYear();
+          return carreraYear === selectedYear;
+        });
+
+        setCarreras(carrerasFiltradas);
         setMeetings(meetingsData);
       } catch (error) {
         console.error('Error al cargar carreras:', error);
@@ -42,7 +64,7 @@ const Carreras = () => {
 
   // Separa carreras completadas y próximas
   const carrerasCompletadas = carreras.filter(c => isCarreraCompletada(c.date_end));
-  const proximasCarreras = carreras.filter(c => !isCarreraCompletada(c.date_start));
+  const proximasCarreras = carreras.filter(c => !isCarreraCompletada(c.date_end));
 
   if (loading) {
     return (
@@ -76,29 +98,80 @@ const Carreras = () => {
         transition={{ delay: 0.2 }}
         className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10"
       >
-        <div className="glass glass-hover rounded-2xl p-6">
+        <motion.div 
+          className="glass glass-hover rounded-2xl p-6 group"
+          whileHover={{ scale: 1.02, y: -5 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
           <div className="flex items-center space-x-3 mb-2">
-            <Flag className="w-6 h-6 text-f1-red" />
+            <motion.div
+              whileHover={{ rotate: 360 }}
+              transition={{ duration: 0.6 }}
+            >
+              <Flag className="w-6 h-6 text-f1-red" />
+            </motion.div>
             <p className="text-white/60 text-sm">Total de Carreras</p>
           </div>
-          <p className="text-4xl font-bold text-white">{carreras.length}</p>
-        </div>
+          <motion.p 
+            className="text-4xl font-bold text-white"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
+          >
+            {carrerasCompletadas.length} / {getTotalRacesForYear(selectedYear)}
+          </motion.p>
+          <p className="text-white/40 text-xs mt-1">
+            Disputadas / Total temporada
+          </p>
+        </motion.div>
 
-        <div className="glass glass-hover rounded-2xl p-6">
+        <motion.div 
+          className="glass glass-hover rounded-2xl p-6 group"
+          whileHover={{ scale: 1.02, y: -5 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
           <div className="flex items-center space-x-3 mb-2">
-            <CheckCircle2 className="w-6 h-6 text-green-500" />
+            <motion.div
+              whileHover={{ scale: 1.2 }}
+              transition={{ duration: 0.3 }}
+            >
+              <CheckCircle2 className="w-6 h-6 text-green-500" />
+            </motion.div>
             <p className="text-white/60 text-sm">Completadas</p>
           </div>
-          <p className="text-4xl font-bold text-white">{carrerasCompletadas.length}</p>
-        </div>
+          <motion.p 
+            className="text-4xl font-bold text-white"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
+          >
+            {carrerasCompletadas.length}
+          </motion.p>
+        </motion.div>
 
-        <div className="glass glass-hover rounded-2xl p-6">
+        <motion.div 
+          className="glass glass-hover rounded-2xl p-6 group"
+          whileHover={{ scale: 1.02, y: -5 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
           <div className="flex items-center space-x-3 mb-2">
-            <Clock className="w-6 h-6 text-blue-400" />
+            <motion.div
+              animate={{ rotate: [0, 360] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            >
+              <Clock className="w-6 h-6 text-blue-400" />
+            </motion.div>
             <p className="text-white/60 text-sm">Por Disputar</p>
           </div>
-          <p className="text-4xl font-bold text-white">{proximasCarreras.length}</p>
-        </div>
+          <motion.p 
+            className="text-4xl font-bold text-white"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
+          >
+            {proximasCarreras.length}
+          </motion.p>
+        </motion.div>
       </motion.div>
 
       {/* Próximas Carreras */}
@@ -125,16 +198,32 @@ const Carreras = () => {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.05 * index }}
-                    whileHover={{ backgroundColor: 'rgba(59, 130, 246, 0.05)' }}
-                    className="px-6 py-5 transition-colors cursor-pointer"
+                    whileHover={{ 
+                      backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                      scale: 1.01,
+                      x: 5
+                    }}
+                    onClick={() => openRaceModal(carrera)}
+                    className="px-6 py-5 transition-all duration-300 cursor-pointer border-l-4 border-transparent hover:border-blue-400"
                   >
                     <div className="flex flex-col md:flex-row md:items-center justify-between space-y-3 md:space-y-0">
                       <div className="flex items-start md:items-center space-x-4 flex-1">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/20">
-                          <span className="text-white font-bold text-lg">
+                        <motion.div 
+                          className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/20"
+                          whileHover={{ 
+                            scale: 1.1, 
+                            rotate: 5,
+                            boxShadow: "0 20px 25px -5px rgba(59, 130, 246, 0.4)"
+                          }}
+                          transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                        >
+                          <motion.span 
+                            className="text-white font-bold text-lg"
+                            whileHover={{ scale: 1.1 }}
+                          >
                             {index + 1}
-                          </span>
-                        </div>
+                          </motion.span>
+                        </motion.div>
 
                         <div className="flex-1">
                           <h3 className="text-white font-bold text-lg mb-1 flex items-center space-x-2">
@@ -203,16 +292,32 @@ const Carreras = () => {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.05 * index }}
-                    whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
-                    className="px-6 py-5 transition-colors cursor-pointer"
+                    whileHover={{ 
+                      backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                      scale: 1.01,
+                      x: 5
+                    }}
+                    onClick={() => openRaceModal(carrera)}
+                    className="px-6 py-5 transition-all duration-300 cursor-pointer border-l-4 border-transparent hover:border-green-400"
                   >
                     <div className="flex flex-col md:flex-row md:items-center justify-between space-y-3 md:space-y-0">
                       <div className="flex items-start md:items-center space-x-4 flex-1">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-f1 flex items-center justify-center flex-shrink-0 shadow-lg shadow-f1-red/20">
-                          <span className="text-white font-bold text-lg">
+                        <motion.div 
+                          className="w-12 h-12 rounded-xl bg-gradient-f1 flex items-center justify-center flex-shrink-0 shadow-lg shadow-f1-red/20"
+                          whileHover={{ 
+                            scale: 1.1, 
+                            rotate: -5,
+                            boxShadow: "0 20px 25px -5px rgba(220, 38, 38, 0.4)"
+                          }}
+                          transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                        >
+                          <motion.span 
+                            className="text-white font-bold text-lg"
+                            whileHover={{ scale: 1.1 }}
+                          >
                             {index + 1}
-                          </span>
-                        </div>
+                          </motion.span>
+                        </motion.div>
 
                         <div className="flex-1">
                           <h3 className="text-white font-bold text-lg mb-1 flex items-center space-x-2">
@@ -264,6 +369,14 @@ const Carreras = () => {
           </p>
         </motion.div>
       )}
+
+      {/* Modal de detalles de carrera */}
+      <RaceModal
+        isOpen={isModalOpen}
+        onClose={closeRaceModal}
+        carrera={selectedRace}
+        meeting={selectedRace ? meetings.find(m => m.meeting_key === selectedRace.meeting_key) : null}
+      />
     </div>
   );
 };
