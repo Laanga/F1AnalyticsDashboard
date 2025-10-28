@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { getStatistics } from '../services/openf1Service';
+import { getStatistics, getChampionshipStandings } from '../services/openf1Service';
 import { useYear } from '../contexts/YearContext';
 import Loader from '../components/ui/Loader';
 import GraficaPuntos from '../components/estadisticas/GraficaPuntos';
 import PanelEstadisticas from '../components/estadisticas/PanelEstadisticas';
 import ClasificacionConstructores from '../components/estadisticas/ClasificacionConstructores';
+import { getTeamColor } from '../utils/formatUtils';
 import { TrendingUp, Users, Flag, BarChart3, Trophy, Zap } from 'lucide-react';
 
 /**
@@ -13,6 +14,7 @@ import { TrendingUp, Users, Flag, BarChart3, Trophy, Zap } from 'lucide-react';
  */
 const Estadisticas = () => {
   const [stats, setStats] = useState(null);
+  const [equipos, setEquipos] = useState([]);
   const [loading, setLoading] = useState(true);
   const { selectedYear } = useYear();
 
@@ -20,9 +22,16 @@ const Estadisticas = () => {
     const cargarEstadisticas = async () => {
       try {
         setLoading(true);
-        const data = await getStatistics();
-        setStats(data);
-        console.log('📊 Estadísticas cargadas:', data.dataSource === 'real' ? 'DATOS REALES' : 'DATOS BASE');
+        const [statsData, standingsData] = await Promise.all([
+          getStatistics(),
+          getChampionshipStandings()
+        ]);
+        
+        setStats(statsData);
+        setEquipos(standingsData.constructors || []);
+        
+        console.log('📊 Estadísticas cargadas:', statsData.dataSource === 'real' ? 'DATOS REALES' : 'DATOS BASE');
+        console.log('🏎️ Equipos cargados:', standingsData.constructors?.length || 0);
       } catch (error) {
         console.error('Error al cargar estadísticas:', error);
       } finally {
@@ -64,6 +73,19 @@ const Estadisticas = () => {
     name: `Ronda ${i + 1}`,
     value: Math.round((leaderPoints / completedRaces) * (i + 1))
   }));
+
+  // Preparar datos para gráfica de equipos (datos reales)
+  const datosEquipos = equipos
+    .sort((a, b) => (b.points || 0) - (a.points || 0)) // Ordenar por puntos descendente
+    .slice(0, 10) // Top 10 equipos
+    .map(equipo => ({
+      name: equipo.team_name && equipo.team_name.length > 15 ? 
+        equipo.team_name.substring(0, 15) + '...' : 
+        equipo.team_name || 'Equipo',
+      value: parseInt(equipo.points) || 0, // Datos reales de puntos
+      color: getTeamColor(equipo.team_name || ''), // Color específico del equipo
+      teamName: equipo.team_name || 'Equipo' // Nombre completo para referencia
+    }));
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -120,7 +142,7 @@ const Estadisticas = () => {
       </div>
 
       {/* Gráficas principales */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-10">
         {/* Top pilotos */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -144,6 +166,20 @@ const Estadisticas = () => {
             datos={datosEvolucion}
             tipo="linea"
             titulo="Evolución de Puntos del Líder"
+          />
+        </motion.div>
+
+        {/* Comparativa de equipos */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="xl:col-span-1 lg:col-span-2"
+        >
+          <GraficaPuntos
+            datos={datosEquipos}
+            tipo="barra"
+            titulo={`Comparativa de Equipos - Temporada ${selectedYear}`}
           />
         </motion.div>
       </div>

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getChampionshipStandings, getDrivers } from '../services/openf1Service';
 import Loader from '../components/ui/Loader';
-import GraficaPuntos from '../components/estadisticas/GraficaPuntos';
 import { Shield, Users, TrendingUp, Trophy, Star } from 'lucide-react';
 import { useYear } from '../contexts/YearContext';
 import { getTeamLogo, getTeamColor } from '../utils/formatUtils';
@@ -86,18 +85,7 @@ const Equipos = () => {
     cargarEquipos();
   }, [selectedYear]);
 
-  // Datos reales para comparación de equipos
-  const datosComparacion = equipos
-    .sort((a, b) => b.puntos - a.puntos) // Ordenar por puntos descendente
-    .map(equipo => ({
-      name: equipo.nombre.length > 15 ? equipo.nombre.substring(0, 15) + '...' : equipo.nombre,
-      value: equipo.puntos, // Datos reales de puntos
-      color: getTeamColor(equipo.nombre), // Color específico del equipo
-      teamName: equipo.nombre // Nombre completo para referencia
-    }));
 
-  // Debug: verificar que los colores se están asignando correctamente
-  console.log('Datos de comparación con colores:', datosComparacion);
 
   if (loading) {
     return (
@@ -128,15 +116,6 @@ const Equipos = () => {
             </p>
           </div>
         </div>
-      </div>
-
-      {/* Gráfica comparativa */}
-      <div className="mb-10 animate__animated animate__fadeInUp animate__delay-1s">
-        <GraficaPuntos
-          datos={datosComparacion}
-          tipo="barra"
-          titulo={`Comparativa de Puntos por Equipo - Temporada ${selectedYear}`}
-        />
       </div>
 
       {/* Grid de equipos */}
