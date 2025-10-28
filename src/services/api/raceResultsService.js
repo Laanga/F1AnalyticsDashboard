@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { API_CONFIG } from '../config/apiConfig.js';
 import { getCachedData, setCachedData } from '../utils/cache.js';
+import { safeRequest } from '../utils/rateLimiter.js';
 
 /**
  * Servicio para operaciones relacionadas con resultados de carreras
@@ -28,7 +29,7 @@ export const getRaceResults = async (sessionKey) => {
     console.log(`🏁 Obteniendo resultados de carrera para sesión ${sessionKey}...`);
     
     // Intentar obtener resultados usando el endpoint session_result
-    const response = await axios.get(`${API_CONFIG.OPENF1.BASE_URL}/session_result`, {
+    const response = await safeRequest(`${API_CONFIG.OPENF1.BASE_URL}/session_result`, {
       params: { session_key: sessionKey }
     });
     
@@ -41,7 +42,7 @@ export const getRaceResults = async (sessionKey) => {
 
     // Si no hay resultados en session_result, intentar con position endpoint
     console.log(`⚠️ No hay resultados en session_result, intentando con position...`);
-    const positionResponse = await axios.get(`${API_CONFIG.OPENF1.BASE_URL}/position`, {
+    const positionResponse = await safeRequest(`${API_CONFIG.OPENF1.BASE_URL}/position`, {
       params: { session_key: sessionKey }
     });
 
@@ -95,7 +96,7 @@ export const getSessionDrivers = async (sessionKey) => {
 
   try {
     console.log(`👥 Obteniendo pilotos para sesión ${sessionKey}...`);
-    const response = await axios.get(`${API_CONFIG.OPENF1.BASE_URL}/drivers`, {
+    const response = await safeRequest(`${API_CONFIG.OPENF1.BASE_URL}/drivers`, {
       params: { session_key: sessionKey }
     });
     
@@ -106,6 +107,14 @@ export const getSessionDrivers = async (sessionKey) => {
 
   } catch (error) {
     console.error(`❌ Error al obtener pilotos para sesión ${sessionKey}:`, error.message);
+    
+    // Intentar usar datos en caché como fallback
+    const oldCachedData = getCachedData(cacheKey, true);
+    if (oldCachedData && oldCachedData.length > 0) {
+      console.log(`⚠️ Usando datos en caché como fallback para sesión ${sessionKey}`);
+      return oldCachedData;
+    }
+    
     return [];
   }
 };

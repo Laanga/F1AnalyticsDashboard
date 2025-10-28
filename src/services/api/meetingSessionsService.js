@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { API_CONFIG } from '../config/apiConfig.js';
 import { getCachedData, setCachedData } from '../utils/cache.js';
+import { safeRequest, delay } from '../utils/rateLimiter.js';
 
 /**
  * Servicio para obtener todas las sesiones de un meeting y sus resultados
@@ -21,7 +22,7 @@ export const getMeetingSessions = async (meetingKey) => {
 
   try {
     console.log(`🏁 Obteniendo sesiones del meeting ${meetingKey}...`);
-    const response = await axios.get(`${API_CONFIG.OPENF1.BASE_URL}/sessions`, {
+    const response = await safeRequest(`${API_CONFIG.OPENF1.BASE_URL}/sessions`, {
       params: { meeting_key: meetingKey }
     });
     
@@ -65,7 +66,7 @@ export const getSessionResults = async (sessionKey, sessionType) => {
     // Para carreras y sprints, intentar primero session_result
     if (sessionType === 'Race' || sessionType === 'Sprint') {
       try {
-        const sessionResultResponse = await axios.get(`${API_CONFIG.OPENF1.BASE_URL}/session_result`, {
+        const sessionResultResponse = await safeRequest(`${API_CONFIG.OPENF1.BASE_URL}/session_result`, {
           params: { session_key: sessionKey }
         });
         results = sessionResultResponse.data || [];
@@ -77,7 +78,7 @@ export const getSessionResults = async (sessionKey, sessionType) => {
     // Si no hay resultados o es una sesión de práctica/clasificación, usar position
     if (results.length === 0) {
       try {
-        const positionResponse = await axios.get(`${API_CONFIG.OPENF1.BASE_URL}/position`, {
+        const positionResponse = await safeRequest(`${API_CONFIG.OPENF1.BASE_URL}/position`, {
           params: { session_key: sessionKey }
         });
         const positions = positionResponse.data || [];
@@ -123,7 +124,7 @@ export const getSessionDrivers = async (sessionKey) => {
 
   try {
     console.log(`👥 Obteniendo pilotos de la sesión ${sessionKey}...`);
-    const response = await axios.get(`${API_CONFIG.OPENF1.BASE_URL}/drivers`, {
+    const response = await safeRequest(`${API_CONFIG.OPENF1.BASE_URL}/drivers`, {
       params: { session_key: sessionKey }
     });
     
@@ -143,41 +144,87 @@ export const getSessionDrivers = async (sessionKey) => {
  * @returns {Promise<Object>} Objeto con todas las sesiones y sus resultados
  */
 export const getCompleteMeetingResults = async (meetingKey) => {
+  const cacheKey = `complete_meeting_${meetingKey}`;
+  
+  const cachedData = getCachedData(cacheKey);
+  if (cachedData) {
+    return cachedData;
+  }
+
   try {
     console.log(`🏆 Obteniendo resultados completos del meeting ${meetingKey}...`);
     
     const sessions = await getMeetingSessions(meetingKey);
     const sessionResults = {};
     
-    for (const session of sessions) {
+    // Procesar sesiones secuencialmente con delays para evitar rate limiting
+    for (let i = 0; i < sessions.length; i++) {
+      const session = sessions[i];
       const sessionType = session.session_name || session.session_type;
-      const results = await getSessionResults(session.session_key, sessionType);
-      const drivers = await getSessionDrivers(session.session_key);
       
-      // Combinar resultados con información de pilotos
-      const completeResults = results.map(result => {
-        const driver = drivers.find(d => d.driver_number === result.driver_number);
-        return {
-          ...result,
-          driver_info: driver || null
+      try {
+        console.log(`📊 Procesando sesión ${i + 1}/${sessions.length}: ${sessionType} (${session.session_key})`);
+        
+        // Obtener resultados y pilotos secuencialmente
+        const results = await getSessionResults(session.session_key, sessionType);
+        
+        // Delay entre peticiones para evitar rate limiting
+        await delay(300); // 300ms entre peticiones
+        
+        const drivers = await getSessionDrivers(session.session_key);
+        
+        // Combinar resultados con información de pilotos
+        const completeResults = results.map(result => {
+          const driver = drivers.find(d => d.driver_number === result.driver_number);
+          return {
+            ...result,
+            driver_info: driver || null
+          };
+        });
+        
+        sessionResults[session.session_key] = {
+          session_info: session,
+          results: completeResults,
+          session_type: sessionType
         };
-      });
-      
-      sessionResults[session.session_key] = {
-        session_info: session,
-        results: completeResults,
-        session_type: sessionType
-      };
+        
+        // Delay adicional entre sesiones
+        if (i < sessions.length - 1) {
+          await delay(500); // 500ms entre sesiones
+        }
+        
+      } catch (sessionError) {
+        console.error(`❌ Error al procesar sesión ${session.session_key}:`, sessionError.message);
+        // Continuar con la siguiente sesión en caso de error
+        sessionResults[session.session_key] = {
+          session_info: session,
+          results: [],
+          session_type: sessionType,
+          error: sessionError.message
+        };
+      }
     }
     
-    console.log(`✅ Resultados completos obtenidos para meeting ${meetingKey}`);
-    return {
+    const result = {
       meeting_key: meetingKey,
       sessions: sessionResults,
       session_list: sessions
     };
+    
+    setCachedData(cacheKey, result);
+    console.log(`✅ Resultados completos obtenidos para meeting ${meetingKey} (${sessions.length} sesiones procesadas)`);
+    return result;
+    
   } catch (error) {
     console.error(`❌ Error al obtener resultados completos del meeting ${meetingKey}:`, error.message);
+    
+    // Intentar usar datos en caché como fallback
+    const oldCachedData = getCachedData(cacheKey, true);
+    if (oldCachedData) {
+      console.log(`⚠️ Usando datos en caché como fallback para meeting ${meetingKey}`);
+      return oldCachedData;
+    }
+    
     return {
       meeting_key: meetingKey,
       sessions: {},

@@ -5,11 +5,18 @@ import { API_CONFIG } from '../config/apiConfig.js';
  */
 const cache = new Map();
 
-export const getCachedData = (key) => {
+export const getCachedData = (key, ignoreExpiration = false) => {
   const cached = cache.get(key);
-  if (cached && Date.now() - cached.timestamp < API_CONFIG.OPENF1.CACHE_DURATION) {
-    console.log(`✅ Cache hit: ${key}`);
-    return cached.data;
+  if (cached) {
+    const isExpired = Date.now() - cached.timestamp >= API_CONFIG.OPENF1.CACHE_DURATION;
+    
+    if (!isExpired) {
+      console.log(`✅ Cache hit: ${key}`);
+      return cached.data;
+    } else if (ignoreExpiration) {
+      console.log(`⚠️ Cache hit (expired, using as fallback): ${key}`);
+      return cached.data;
+    }
   }
   return null;
 };

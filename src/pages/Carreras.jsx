@@ -15,6 +15,7 @@ const Carreras = () => {
   const [carreras, setCarreras] = useState([]);
   const [meetings, setMeetings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedRace, setSelectedRace] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { selectedYear } = useYear();
@@ -32,30 +33,65 @@ const Carreras = () => {
   };
 
   useEffect(() => {
-    const cargarCarreras = async () => {
+    const cargarDatos = async () => {
       try {
         setLoading(true);
-        const [sesionesData, meetingsData] = await Promise.all([
-          getRaces(),
-          getMeetings(),
+        setError(null);
+        
+        console.log('🔄 Cargando datos de carreras y meetings...');
+        
+        // Cargar datos en paralelo con timeout
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout: La carga de datos tardó demasiado')), 30000)
+        );
+        
+        const [carrerasData, meetingsData] = await Promise.race([
+          Promise.all([
+            getRaces(),
+            getMeetings()
+          ]),
+          timeoutPromise
         ]);
 
+        console.log('✅ Datos cargados exitosamente:', {
+          carreras: carrerasData?.length || 0,
+          meetings: meetingsData?.length || 0
+        });
+
         // Filtrar carreras por año seleccionado
-        const carrerasFiltradas = sesionesData.filter(carrera => {
+        const carrerasFiltradas = carrerasData.filter(carrera => {
           const carreraYear = new Date(carrera.date_start).getFullYear();
           return carreraYear === selectedYear;
         });
 
-        setCarreras(carrerasFiltradas);
-        setMeetings(meetingsData);
+        setCarreras(carrerasFiltradas || []);
+        setMeetings(meetingsData || []);
       } catch (error) {
-        console.error('Error al cargar carreras:', error);
+        console.error('❌ Error al cargar datos de carreras:', error);
+        setError(error.message || 'Error al cargar los datos');
+        
+        // Intentar cargar datos básicos como fallback
+        try {
+          console.log('🔄 Intentando cargar datos básicos como fallback...');
+          const carrerasBasicas = await getRaces();
+          const carrerasFiltradas = carrerasBasicas.filter(carrera => {
+            const carreraYear = new Date(carrera.date_start).getFullYear();
+            return carreraYear === selectedYear;
+          });
+          setCarreras(carrerasFiltradas || []);
+          setMeetings([]);
+          setError('Algunos datos pueden estar incompletos');
+        } catch (fallbackError) {
+          console.error('❌ Error en fallback:', fallbackError);
+          setCarreras([]);
+          setMeetings([]);
+        }
       } finally {
         setLoading(false);
       }
     };
 
-    cargarCarreras();
+    cargarDatos();
   }, [selectedYear]);
 
 
@@ -90,6 +126,23 @@ const Carreras = () => {
           Calendario y resultados de la temporada
         </p>
       </motion.div>
+
+      {/* Indicador de error */}
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg"
+        >
+          <div className="flex items-center">
+            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            <span className="font-medium">Advertencia:</span>
+            <span className="ml-1">{error}</span>
+          </div>
+        </motion.div>
+      )}
 
       {/* Estadísticas rápidas */}
       <motion.div

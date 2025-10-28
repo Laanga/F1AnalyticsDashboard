@@ -2,6 +2,7 @@ import axios from 'axios';
 import { API_CONFIG, getCurrentYear } from '../config/apiConfig.js';
 import { getCachedData, setCachedData, delay } from '../utils/cache.js';
 import { getSelectedYear } from '../../hooks/useSelectedYear.js';
+import { safeRequest } from '../utils/rateLimiter.js';
 
 /**
  * Servicio para operaciones relacionadas con sesiones y carreras
@@ -23,7 +24,10 @@ export const getSessions = async (sessionName = null) => {
       params.session_name = sessionName;
     }
 
-    const response = await axios.get(`${API_CONFIG.OPENF1.BASE_URL}/sessions`, { params });
+    // Usar safeRequest con rate limiting
+    const response = await safeRequest(`${API_CONFIG.OPENF1.BASE_URL}/sessions`, { 
+      params
+    });
     
     const sessions = response.data || [];
     setCachedData(cacheKey, sessions);
@@ -31,6 +35,14 @@ export const getSessions = async (sessionName = null) => {
     return sessions;
   } catch (error) {
     console.error('❌ Error al obtener sesiones:', error.message);
+    
+    // Si hay datos en caché antiguos, usarlos como fallback
+    const oldCachedData = getCachedData(cacheKey, true); // ignorar expiración
+    if (oldCachedData && oldCachedData.length > 0) {
+      console.log('⚠️ Usando datos en caché como fallback');
+      return oldCachedData;
+    }
+    
     return [];
   }
 };
@@ -115,11 +127,16 @@ export const getRaces = async () => {
       const raceYear = new Date(race.date_start).getFullYear();
       return raceYear === selectedYear;
     });
-    
+
     // Si es el año actual o futuro, también obtener carreras futuras de Ergast
     let futureRaces = [];
     if (selectedYear >= currentYear) {
-      futureRaces = await getFutureRacesFromErgast(selectedYear);
+      try {
+        futureRaces = await getFutureRacesFromErgast(selectedYear);
+      } catch (futureError) {
+        console.warn('⚠️ Error al obtener carreras futuras, continuando solo con históricas:', futureError.message);
+        futureRaces = [];
+      }
     }
     
     // Combinar carreras históricas y futuras
@@ -133,8 +150,20 @@ export const getRaces = async () => {
     return allRaces;
   } catch (error) {
     console.error('❌ Error al obtener carreras combinadas:', error.message);
-    // Fallback a solo carreras históricas
-    return await getSessions('Race');
+    
+    // Fallback más robusto
+    try {
+      console.log('🔄 Intentando fallback a carreras históricas...');
+      const fallbackRaces = await getSessions('Race');
+      const filteredFallback = fallbackRaces.filter(race => {
+        const raceYear = new Date(race.date_start).getFullYear();
+        return raceYear === selectedYear;
+      });
+      return filteredFallback;
+    } catch (fallbackError) {
+      console.error('❌ Error en fallback:', fallbackError.message);
+      return [];
+    }
   }
 };
 
@@ -259,15 +288,33 @@ export const getMeetings = async () => {
 };
 
 export const getPositions = async (sessionKey) => {
+  const cacheKey = `positions_${sessionKey}`;
+  
+  const cachedData = getCachedData(cacheKey);
+  if (cachedData) {
+    return cachedData;
+  }
+
   try {
     console.log(`📊 Obteniendo posiciones para sesión ${sessionKey}...`);
-    const response = await axios.get(`${API_CONFIG.OPENF1.BASE_URL}/position`, {
+    const response = await safeRequest(`${API_CONFIG.OPENF1.BASE_URL}/position`, {
       params: { session_key: sessionKey }
     });
     
-    return response.data || [];
+    const positions = response.data || [];
+    setCachedData(cacheKey, positions);
+    console.log(`✅ ${positions.length} posiciones obtenidas para sesión ${sessionKey}`);
+    return positions;
   } catch (error) {
     console.error(`❌ Error al obtener posiciones para sesión ${sessionKey}:`, error.message);
+    
+    // Intentar usar datos en caché como fallback
+    const oldCachedData = getCachedData(cacheKey, true);
+    if (oldCachedData && oldCachedData.length > 0) {
+      console.log(`⚠️ Usando datos en caché como fallback para posiciones de sesión ${sessionKey}`);
+      return oldCachedData;
+    }
+    
     return [];
   }
 };
