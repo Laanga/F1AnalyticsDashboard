@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { getChampionshipStandings, getDrivers } from '../services/openf1Service';
 import Loader from '../components/ui/Loader';
-import { Shield, Users, TrendingUp, Trophy, Star } from 'lucide-react';
+import { Shield, Users, TrendingUp, Trophy } from 'lucide-react';
 import { useYear } from '../contexts/YearContext';
 import { getTeamLogo, getTeamColor, getDriverPhoto } from '../utils/formatUtils';
+import { getDriverNationality } from '../utils/nationalityUtils';
 
 const Equipos = () => {
   const [standings, setStandings] = useState(null);
@@ -252,18 +253,14 @@ const Equipos = () => {
                           {piloto.driver_number}
                         </span>
                       </div>
-                      {idx === 0 && (
-                        <div className="absolute -top-1 -right-1 animate__animated animate__bounceIn animate__delay-1s">
-                          <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                        </div>
-                      )}
+
                     </div>
                     <div>
                       <p className="text-white font-semibold hover:animate__animated hover:animate__pulse">
                         {piloto.full_name}
                       </p>
                       <p className="text-white/50 text-xs">
-                        {piloto.name_acronym} • {piloto.country_code}
+                        {piloto.name_acronym} • {getDriverNationality(piloto)}
                       </p>
                     </div>
                   </div>

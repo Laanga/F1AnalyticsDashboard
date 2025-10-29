@@ -115,6 +115,13 @@ export const getDriverNationality = (driver) => {
   }
   
   if (driver.country_code) {
+    // Intentar traducir el country_code también, por si contiene una nacionalidad en inglés
+    const translated = translateNationality(driver.country_code);
+    // Si la traducción es diferente al original, significa que se tradujo exitosamente
+    if (translated !== driver.country_code) {
+      return translated;
+    }
+    // Si no se pudo traducir, devolver el código de país original
     return driver.country_code;
   }
   
