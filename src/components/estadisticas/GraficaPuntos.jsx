@@ -1,6 +1,7 @@
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { motion } from 'framer-motion';
 import { getChartColor, assignColorsToData } from '../../utils/chartColors';
+import { getTeamColor, getTeamLogo, getDriverPhoto } from '../../utils/formatUtils';
 
 // Componente personalizado para mostrar banderas en el eje X
 const CustomXAxisTick = ({ x, y, payload }) => {
@@ -41,6 +42,147 @@ const CustomXAxisTick = ({ x, y, payload }) => {
   );
 };
 
+// Componente personalizado para mostrar logos de equipos en el eje X
+const CustomTeamLogoTick = ({ x, y, payload, data }) => {
+  if (!payload || !payload.value || !data) {
+    return null;
+  }
+
+  // Buscar el equipo en los datos
+  const teamData = data.find(item => 
+    item.name === payload.value || 
+    item.teamName === payload.value
+  );
+
+  if (!teamData) {
+    return (
+      <g>
+        <text x={x} y={y} textAnchor="middle" fill="rgba(255,255,255,0.7)" fontSize="10">
+          {payload.value}
+        </text>
+      </g>
+    );
+  }
+
+  return (
+    <g>
+      {teamData.logo ? (
+        <foreignObject x={x - 20} y={y - 10} width="40" height="40">
+          <img 
+            src={teamData.logo} 
+            alt={teamData.teamName || teamData.name}
+            style={{ 
+              width: '40px', 
+              height: '40px', 
+              objectFit: 'contain',
+              borderRadius: '6px'
+            }}
+            onError={(e) => {
+              e.target.style.display = 'none';
+            }}
+          />
+        </foreignObject>
+      ) : (
+        <circle cx={x} cy={y + 10} r="12" fill={teamData.color || '#666'} />
+      )}
+      <text 
+        x={x} 
+        y={y + 35} 
+        textAnchor="middle" 
+        fill="rgba(255,255,255,0.8)" 
+        fontSize="12"
+        fontWeight="500"
+      >
+        {(teamData.name || payload.value).length > 10 ? 
+          (teamData.name || payload.value).substring(0, 10) + '...' : 
+          (teamData.name || payload.value)
+        }
+      </text>
+    </g>
+  );
+};
+
+// Componente personalizado para mostrar fotos de pilotos en el eje X
+const CustomDriverPhotoTick = ({ x, y, payload, data }) => {
+  if (!payload || !payload.value) return null;
+
+  // Buscar los datos del piloto en el array de datos
+  const item = data?.find(d => d.name === payload.value);
+  
+  const driverData = {
+    name: payload.value,
+    photo: null,
+    color: item?.color || '#666'
+  };
+
+  // Intentar obtener la foto del piloto usando los datos reales
+  if (item?.driverData) {
+    // Crear objeto piloto con los datos de Ergast
+    const driverObj = {
+      name_acronym: item.driverData.code,
+      full_name: `${item.driverData.givenName} ${item.driverData.familyName}`,
+      last_name: item.driverData.familyName?.toLowerCase(),
+      familyName: item.driverData.familyName
+    };
+
+    const photo = getDriverPhoto(driverObj);
+    if (photo) {
+      driverData.photo = photo;
+    }
+  } else {
+    // Fallback: intentar obtener la foto basándose en el nombre/código
+    const driverObj = {
+      name_acronym: payload.value,
+      full_name: payload.value,
+      last_name: payload.value.toLowerCase(),
+      familyName: payload.value
+    };
+
+    const photo = getDriverPhoto(driverObj);
+    if (photo) {
+      driverData.photo = photo;
+    }
+  }
+
+  return (
+    <g>
+      {driverData.photo ? (
+        <foreignObject x={x - 20} y={y - 2} width="40" height="40">
+          <img 
+            src={driverData.photo} 
+            alt={driverData.name}
+            style={{ 
+              width: '40px', 
+              height: '40px', 
+              objectFit: 'cover',
+              borderRadius: '50%',
+              border: '2px solid rgba(255,255,255,0.3)'
+            }}
+            onError={(e) => {
+              e.target.style.display = 'none';
+            }}
+          />
+        </foreignObject>
+      ) : (
+        <circle cx={x} cy={y + 10} r="12" fill={driverData.color || '#666'} />
+      )}
+      <text 
+        x={x} 
+        y={y + 55} 
+        textAnchor="middle" 
+        fill="rgba(255,255,255,0.8)" 
+        fontSize="12"
+        fontWeight="500"
+      >
+        {(driverData.name || payload.value).length > 10 ? 
+          (driverData.name || payload.value).substring(0, 10) + '...' : 
+          (driverData.name || payload.value)
+        }
+      </text>
+    </g>
+  );
+};
+
 /**
  * Componente de gráfica reutilizable con estilo glass
  * @param {Array} datos - Datos para la gráfica
@@ -49,6 +191,7 @@ const CustomXAxisTick = ({ x, y, payload }) => {
  * @param {Array} lineas - Array de configuraciones para múltiples líneas (solo para tipo 'linea')
  */
 const GraficaPuntos = ({ datos = [], tipo = 'linea', titulo = 'Gráfica', lineas = [], showTitle = true }) => {
+  
   // Mapeo de códigos de país a nombres para el tooltip
   const countryNames = {
     'BH': 'Bahrain', 'SA': 'Saudi Arabia', 'AU': 'Australia', 'JP': 'Japan',
@@ -137,17 +280,20 @@ const GraficaPuntos = ({ datos = [], tipo = 'linea', titulo = 'Gráfica', lineas
             <XAxis 
               dataKey="name" 
               stroke="rgba(255,255,255,0.5)"
-              tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 12 }}
+              tick={
+                datos.length > 0 && datos[0]?.showDriverPhoto ? 
+                  (props) => <CustomDriverPhotoTick {...props} data={datos} /> :
+                datos.length > 0 && datos[0]?.showLogo ? 
+                  (props) => <CustomTeamLogoTick {...props} data={datos} /> : 
+                { fill: 'rgba(255,255,255,0.7)', fontSize: 12 }
+              }
+              height={datos.length > 0 && (datos[0]?.showLogo || datos[0]?.showDriverPhoto) ? 80 : 30}
             />
             <YAxis 
               stroke="rgba(255,255,255,0.5)"
               tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 12 }}
             />
             <Tooltip content={<CustomTooltip />} />
-            <Legend 
-              wrapperStyle={{ color: 'rgba(255,255,255,0.7)' }}
-              iconType="circle"
-            />
             <Bar 
               dataKey="value" 
               radius={[8, 8, 0, 0]}

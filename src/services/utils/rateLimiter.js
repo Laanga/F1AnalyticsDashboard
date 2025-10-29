@@ -19,7 +19,6 @@ const MAX_RETRIES = 3;
  */
 export const exponentialBackoff = (attempt, baseDelay = BASE_DELAY) => {
   const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 1000; // Jitter aleatorio
-  console.log(`⏳ Esperando ${Math.round(delay)}ms antes del reintento ${attempt + 1}...`);
   return new Promise(resolve => setTimeout(resolve, delay));
 };
 
@@ -85,19 +84,10 @@ export const requestWithRetry = async (url, config = {}, maxRetries = MAX_RETRIE
   
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      // Si no es el primer intento, aplicar backoff
-      if (attempt > 0) {
-        await exponentialBackoff(attempt - 1);
-      }
+      // Aplicar rate limiting
+      await applyRateLimit();
       
-      console.log(`🔄 Intento ${attempt + 1}/${maxRetries + 1} para: ${url}`);
-      
-      const response = await axios.get(url, {
-        timeout: 15000, // 15 segundos timeout
-        ...config
-      });
-      
-      console.log(`✅ Petición exitosa en intento ${attempt + 1}: ${url}`);
+      const response = await axios(config);
       return response;
       
     } catch (error) {
@@ -136,7 +126,10 @@ export const requestWithRetry = async (url, config = {}, maxRetries = MAX_RETRIE
  * @returns {Promise} Promise con la respuesta
  */
 export const safeRequest = async (url, config = {}) => {
-  return queueRequest(() => requestWithRetry(url, config));
+  return queueRequest(async () => {
+    await applyRateLimit();
+    return requestWithRetry(url, config);
+  });
 };
 
 /**
@@ -145,6 +138,29 @@ export const safeRequest = async (url, config = {}) => {
  * @returns {Promise} Promise que se resuelve después del delay
  */
 export const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * Rate limiter con control de tiempo entre peticiones
+ */
+let lastRequestTime = 0;
+const MIN_REQUEST_INTERVAL = 1000; // 1 segundo mínimo entre peticiones
+
+/**
+ * Aplica rate limiting basado en tiempo
+ * @param {number} minInterval - Intervalo mínimo entre peticiones en ms
+ * @returns {Promise} Promise que se resuelve cuando es seguro hacer la petición
+ */
+export const applyRateLimit = async (minInterval = MIN_REQUEST_INTERVAL) => {
+  const now = Date.now();
+  const timeSinceLastRequest = now - lastRequestTime;
+  
+  if (timeSinceLastRequest < minInterval) {
+    const waitTime = minInterval - timeSinceLastRequest;
+    await delay(waitTime);
+  }
+  
+  lastRequestTime = Date.now();
+};
 
 /**
  * Obtiene el estado actual de la queue

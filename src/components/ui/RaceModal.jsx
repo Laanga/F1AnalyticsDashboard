@@ -20,10 +20,8 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
     race: []
   });
 
-  // Calcular valores derivados después de los hooks
   const isCompleted = carrera ? isCarreraCompletada(carrera.date_end) : false;
 
-  // Función para cargar todos los datos del meeting
   const loadMeetingData = async () => {
     if (!meeting?.meeting_key) return;
     
@@ -36,7 +34,6 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
       const categorized = categorizeSessionsByType(data.session_list);
       setCategorizedSessions(categorized);
       
-      // Establecer la pestaña activa basada en la sesión actual
       const currentSessionType = (carrera?.session_name || carrera?.session_type || '').toLowerCase();
       if (currentSessionType.includes('practice') || currentSessionType.includes('free')) {
         setActiveTab('practice');
@@ -55,14 +52,12 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
     }
   };
 
-  // Cargar datos del meeting cuando el modal se abre
   useEffect(() => {
     if (isOpen && meeting?.meeting_key) {
       loadMeetingData();
     }
   }, [isOpen, meeting?.meeting_key]);
 
-  // Función para obtener el icono de cada tipo de sesión
   const getSessionIcon = (type) => {
     switch (type) {
       case 'practice':
@@ -78,7 +73,6 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
     }
   };
 
-  // Función para obtener el nombre de cada tipo de sesión
   const getSessionName = (type) => {
     switch (type) {
       case 'practice':
@@ -94,7 +88,6 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
     }
   };
 
-  // Función para renderizar los resultados de una sesión
   const renderSessionResults = (sessionType) => {
     const sessions = categorizedSessions[sessionType] || [];
     
@@ -143,9 +136,56 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
                       className="flex items-center justify-between p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
                     >
                       <div className="flex items-center space-x-3">
-                        <div className="flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-bold text-xs">
-                          {result.position || index + 1}
-                        </div>
+                        <motion.div 
+                          className={`relative flex items-center justify-center w-10 h-10 rounded-xl font-bold text-sm shadow-lg border ${
+                            (result.position || index + 1) === 1 
+                              ? 'bg-gradient-to-br from-yellow-300 via-yellow-400 to-amber-500 text-black border-yellow-200/50 shadow-yellow-400/30' 
+                              : (result.position || index + 1) === 2 
+                              ? 'bg-gradient-to-br from-gray-300 via-gray-400 to-slate-500 text-black border-gray-200/50 shadow-gray-400/30'
+                              : (result.position || index + 1) === 3 
+                              ? 'bg-gradient-to-br from-amber-600 via-orange-500 to-amber-700 text-white border-amber-300/50 shadow-amber-500/30'
+                              : 'bg-gradient-to-br from-slate-600 via-slate-700 to-slate-800 text-white border-slate-400/30 shadow-slate-600/20'
+                          }`}
+                          whileHover={{ 
+                            scale: 1.1, 
+                            rotate: 5,
+                            boxShadow: (result.position || index + 1) <= 3 
+                              ? '0 10px 25px rgba(255, 215, 0, 0.4)' 
+                              : '0 10px 25px rgba(100, 116, 139, 0.3)'
+                          }}
+                          whileTap={{ scale: 0.95 }}
+                          transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                          style={{
+                            backdropFilter: 'blur(10px)',
+                            boxShadow: (result.position || index + 1) <= 3 
+                              ? '0 8px 20px rgba(255, 215, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3)' 
+                              : '0 8px 20px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                          }}
+                        >
+                          {/* Efecto de brillo para el podio */}
+                          {(result.position || index + 1) <= 3 && (
+                            <motion.div
+                              className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                              animate={{
+                                x: ['-100%', '100%'],
+                              }}
+                              transition={{
+                                duration: 2,
+                                repeat: Infinity,
+                                repeatDelay: 3,
+                                ease: "easeInOut"
+                              }}
+                              style={{ clipPath: 'inset(0 0 0 0 round 12px)' }}
+                            />
+                          )}
+                          
+                          {/* Número de posición */}
+                          <span className="relative z-10 font-extrabold tracking-tight">
+                            {result.position || index + 1}
+                          </span>
+                          
+
+                        </motion.div>
                         <div>
                           <p className="text-white font-medium text-sm">
                             {result.driver_info?.full_name || result.driver_info?.broadcast_name || `Piloto #${result.driver_number}`}
@@ -211,7 +251,7 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
           >
             {/* Modal Content */}
             <motion.div
@@ -219,33 +259,73 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-gray-900/95 backdrop-blur-xl rounded-3xl border border-white/10 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              className="glass glass-hover rounded-3xl border border-white/20 shadow-glass max-w-5xl w-full max-h-[90vh] overflow-y-auto"
+              style={{
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                backdropFilter: 'blur(20px)',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1)'
+              }}
             >
               {/* Header */}
-              <div className="relative p-6 border-b border-white/10">
-                <button
+              <div className="relative p-6 border-b border-white/10" style={{
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+                backdropFilter: 'blur(10px)'
+              }}>
+                <motion.button
                   onClick={onClose}
-                  className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                  whileHover={{ scale: 1.1, rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="absolute top-4 right-4 p-3 rounded-full glass border border-white/20 hover:border-white/30 transition-all duration-300"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    backdropFilter: 'blur(10px)'
+                  }}
                 >
                   <X className="w-5 h-5 text-white" />
-                </button>
+                </motion.button>
                 
-                <div className="flex items-start space-x-4">
-                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${
-                    isCompleted 
-                      ? 'bg-gradient-to-br from-green-500 to-green-600' 
-                      : 'bg-gradient-to-br from-blue-500 to-blue-600'
-                  }`}>
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="flex items-start space-x-4"
+                >
+                  <motion.div 
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                    className={`w-16 h-16 rounded-2xl flex items-center justify-center glass border border-white/20 shadow-glass ${
+                      isCompleted 
+                        ? 'bg-gradient-to-br from-green-500/30 to-green-600/30' 
+                        : 'bg-gradient-to-br from-blue-500/30 to-blue-600/30'
+                    }`}
+                    style={{
+                      backdropFilter: 'blur(10px)',
+                      boxShadow: isCompleted 
+                        ? '0 8px 25px rgba(34, 197, 94, 0.3)' 
+                        : '0 8px 25px rgba(59, 130, 246, 0.3)'
+                    }}
+                  >
                     <span className="text-2xl font-bold text-white">
                       {carrera.session_name?.replace('Race', 'R') || 'R'}
                     </span>
-                  </div>
+                  </motion.div>
                   
                   <div className="flex-1">
-                    <h2 className="text-2xl font-bold text-white mb-2">
+                    <motion.h2 
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.3 }}
+                      className="text-2xl font-bold text-white mb-2 text-glow"
+                    >
                       {meeting?.meeting_name || carrera.session_name || 'Gran Premio'}
-                    </h2>
-                    <div className="flex items-center space-x-4 text-white/60">
+                    </motion.h2>
+                    <motion.div 
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.4 }}
+                      className="flex items-center space-x-4 text-white/60"
+                    >
                       <div className="flex items-center space-x-1">
                         <MapPin className="w-4 h-4" />
                         <span>{meeting?.location || 'Ubicación no disponible'}</span>
@@ -254,27 +334,94 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
                         <Calendar className="w-4 h-4" />
                         <span>{formatearFecha(carrera.date_start)}</span>
                       </div>
-                    </div>
+                    </motion.div>
                   </div>
-                </div>
+                </motion.div>
               </div>
 
               {/* Content */}
               <div className="p-6 space-y-6">
-                {/* Status Badge */}
-                <div className="flex justify-center">
-                  <div className={`px-4 py-2 rounded-full text-sm font-medium ${
-                    isCompleted
-                      ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                      : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                  }`}>
-                    {isCompleted ? 'Evento Completado' : 'Próximo Evento'}
-                  </div>
-                </div>
+                {/* Loading State */}
+                {loadingMeeting && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex flex-col items-center justify-center py-12 space-y-4"
+                  >
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      className="w-12 h-12 border-4 border-f1-red/30 border-t-f1-red rounded-full"
+                    />
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                      className="text-center"
+                    >
+                      <p className="text-white font-medium mb-1">Cargando datos de la carrera...</p>
+                      <p className="text-white/60 text-sm">Obteniendo información detallada del evento</p>
+                    </motion.div>
+                    
+                    {/* Loading dots animation */}
+                    <div className="flex space-x-1">
+                      {[0, 1, 2].map((i) => (
+                        <motion.div
+                          key={i}
+                          animate={{
+                            scale: [1, 1.2, 1],
+                            opacity: [0.5, 1, 0.5]
+                          }}
+                          transition={{
+                            duration: 1,
+                            repeat: Infinity,
+                            delay: i * 0.2
+                          }}
+                          className="w-2 h-2 bg-f1-red rounded-full"
+                        />
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
 
-                {/* Meeting Information */}
-                {meeting && (
-                  <div className="glass rounded-xl p-4">
+                {/* Content when not loading */}
+                {!loadingMeeting && (
+                  <>
+                    {/* Status Badge */}
+                    <div className="flex justify-center">
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.1 }}
+                        className={`px-6 py-3 rounded-2xl text-sm font-medium glass border transition-all duration-300 ${
+                          isCompleted
+                            ? 'bg-green-500/20 text-green-400 border-green-500/30 shadow-green-500/20'
+                            : 'bg-blue-500/20 text-blue-400 border-blue-500/30 shadow-blue-500/20'
+                        }`}
+                        style={{
+                          boxShadow: isCompleted 
+                            ? '0 8px 25px rgba(34, 197, 94, 0.2)' 
+                            : '0 8px 25px rgba(59, 130, 246, 0.2)'
+                        }}
+                      >
+                        {isCompleted ? '✅ Evento Completado' : '🏁 Próximo Evento'}
+                      </motion.div>
+                    </div>
+                  </>
+                )}
+
+                 {/* Meeting Information */}
+                 {!loadingMeeting && meeting && (
+                   <motion.div 
+                     initial={{ opacity: 0, y: 20 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     transition={{ delay: 0.2 }}
+                     className="glass glass-hover rounded-2xl p-6 border border-white/10"
+                     style={{
+                       background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)',
+                       backdropFilter: 'blur(10px)'
+                     }}
+                   >
                     <div className="flex items-center space-x-2 mb-3">
                       <Users className="w-5 h-5 text-purple-400" />
                       <h3 className="font-semibold text-white">Información del Evento</h3>
@@ -299,54 +446,92 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
                         </div>
                       )}
                     </div>
-                  </div>
+                  </motion.div>
                 )}
 
                 {/* Session Tabs */}
-                <div className="glass rounded-xl p-1">
-                  <div className="flex space-x-1">
-                    {['practice', 'qualifying', 'sprint', 'race'].map((tab) => {
+                {!loadingMeeting && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="glass rounded-2xl p-2 border border-white/10"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
+                      backdropFilter: 'blur(15px)'
+                    }}
+                  >
+                    <div className="flex space-x-2">
+                      {['practice', 'qualifying', 'sprint', 'race'].map((tab) => {
                       const hasData = categorizedSessions[tab]?.length > 0;
                       return (
-                        <button
+                        <motion.button
                           key={tab}
                           onClick={() => setActiveTab(tab)}
                           disabled={!hasData}
-                          className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-lg text-sm font-medium transition-all ${
+                          whileHover={hasData ? { scale: 1.02, y: -1 } : {}}
+                          whileTap={hasData ? { scale: 0.98 } : {}}
+                          className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl text-sm font-medium transition-all duration-300 ${
                             activeTab === tab
-                              ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                              ? 'glass text-white shadow-glass border border-white/20'
                               : hasData
-                              ? 'text-white/70 hover:text-white hover:bg-white/10'
+                              ? 'text-white/70 hover:text-white hover:glass hover:border-white/10'
                               : 'text-white/30 cursor-not-allowed'
                           }`}
+                          style={activeTab === tab ? {
+                            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(147, 51, 234, 0.3) 100%)',
+                            backdropFilter: 'blur(10px)',
+                            boxShadow: '0 8px 25px rgba(59, 130, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                          } : {}}
                         >
-                          {getSessionIcon(tab)}
+                          <motion.div
+                            animate={activeTab === tab ? { scale: [1, 1.1, 1] } : {}}
+                            transition={{ duration: 0.3 }}
+                          >
+                            {getSessionIcon(tab)}
+                          </motion.div>
                           <span>{getSessionName(tab)}</span>
                           {hasData && (
-                            <span className="bg-white/20 text-xs px-1.5 py-0.5 rounded-full">
+                            <motion.span 
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="glass text-xs px-2 py-1 rounded-full border border-white/20"
+                              style={{
+                                background: 'rgba(255, 255, 255, 0.1)',
+                                backdropFilter: 'blur(5px)'
+                              }}
+                            >
                               {categorizedSessions[tab].length}
-                            </span>
+                            </motion.span>
                           )}
-                        </button>
+                        </motion.button>
                       );
                     })}
-                  </div>
-                </div>
+                   </div>
+                 </motion.div>
+                )}
 
-                {/* Session Content */}
-                <div className="min-h-[300px]">
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={activeTab}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      {renderSessionResults(activeTab)}
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
+                 {/* Session Content */}
+                 {!loadingMeeting && (
+                   <motion.div 
+                     initial={{ opacity: 0, y: 20 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     transition={{ delay: 0.4 }}
+                     className="min-h-[300px]"
+                   >
+                     <AnimatePresence mode="wait">
+                       <motion.div
+                         key={activeTab}
+                         initial={{ opacity: 0, y: 20 }}
+                         animate={{ opacity: 1, y: 0 }}
+                         exit={{ opacity: 0, y: -20 }}
+                         transition={{ duration: 0.3 }}
+                       >
+                         {renderSessionResults(activeTab)}
+                       </motion.div>
+                     </AnimatePresence>
+                   </motion.div>
+                 )}
               </div>
 
 

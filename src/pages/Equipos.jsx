@@ -1,15 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { getChampionshipStandings, getDrivers } from '../services/openf1Service';
 import Loader from '../components/ui/Loader';
 import { Shield, Users, TrendingUp, Trophy, Star } from 'lucide-react';
 import { useYear } from '../contexts/YearContext';
-import { getTeamLogo, getTeamColor } from '../utils/formatUtils';
+import { getTeamLogo, getTeamColor, getDriverPhoto } from '../utils/formatUtils';
 
-/**
- * Página de Equipos - Muestra equipos agrupados por pilotos
- */
 const Equipos = () => {
-  const [equipos, setEquipos] = useState([]);
+  const [standings, setStandings] = useState(null);
+  const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(true);
   const { selectedYear } = useYear();
 
@@ -18,39 +16,31 @@ const Equipos = () => {
       try {
         setLoading(true);
         
-        // Obtener datos de standings (Ergast) y pilotos con fotos (OpenF1 + Ergast)
         const [standingsData, driversData] = await Promise.all([
           getChampionshipStandings(),
           getDrivers()
         ]);
         
-        // Crear mapas para búsqueda rápida
         const driversMap = new Map();
         const driversMapByName = new Map();
         
         driversData.forEach(driver => {
-          // Mapear por número de piloto
           if (driver.driver_number) {
             driversMap.set(String(driver.driver_number), driver);
           }
-          // Mapear por nombre completo como fallback
           if (driver.full_name) {
             driversMapByName.set(driver.full_name.toLowerCase(), driver);
           }
-          // Mapear por acrónimo como segundo fallback
           if (driver.name_acronym) {
             driversMapByName.set(driver.name_acronym.toLowerCase(), driver);
           }
         });
         
-        // Combinar datos de standings con fotos de pilotos
         const equiposFormateados = standingsData.constructors.map(constructor => ({
           nombre: constructor.team_name,
           pilotos: constructor.drivers.map(driver => {
-            // Buscar piloto por número primero
             let driverWithPhoto = driversMap.get(String(driver.driver_number));
             
-            // Si no se encuentra por número, buscar por nombre
             if (!driverWithPhoto) {
               driverWithPhoto = driversMapByName.get(driver.full_name?.toLowerCase()) ||
                                driversMapByName.get(driver.name_acronym?.toLowerCase());
@@ -70,11 +60,9 @@ const Equipos = () => {
           color: constructor.team_colour || '#e10600',
           puntos: constructor.points
         }));
-
-        console.log('Datos de drivers obtenidos:', driversData);
-        console.log('Datos de standings obtenidos:', standingsData);
-        console.log('Equipos formateados con fotos:', equiposFormateados);
-        setEquipos(equiposFormateados);
+        
+        setStandings({ constructors: equiposFormateados });
+        setDrivers(driversData);
       } catch (error) {
         console.error('Error al cargar equipos:', error);
       } finally {
@@ -85,7 +73,44 @@ const Equipos = () => {
     cargarEquipos();
   }, [selectedYear]);
 
+  const formatearEquipos = useCallback((driversData, standingsData) => {
+    if (!driversData || !standingsData) return [];
 
+    const equiposMap = new Map();
+
+    driversData.forEach(driver => {
+      const teamName = driver.team_name;
+      if (!equiposMap.has(teamName)) {
+        equiposMap.set(teamName, {
+          nombre: teamName,
+          color: getTeamColor(teamName),
+          logo: getTeamLogo(teamName),
+          pilotos: [],
+          puntos: 0,
+          posicion: 0
+        });
+      }
+      equiposMap.get(teamName).pilotos.push(driver);
+    });
+
+    standingsData.constructors?.forEach(constructor => {
+      const teamName = constructor.nombre;
+      if (equiposMap.has(teamName)) {
+        const equipo = equiposMap.get(teamName);
+        equipo.puntos = constructor.puntos;
+        equipo.posicion = constructor.position || 0;
+      }
+    });
+
+    const equiposArray = Array.from(equiposMap.values());
+    equiposArray.sort((a, b) => a.posicion - b.posicion);
+
+    return equiposArray;
+  }, []);
+
+  const equipos = useMemo(() => {
+    return standings?.constructors || [];
+  }, [standings]);
 
   if (loading) {
     return (
@@ -97,7 +122,6 @@ const Equipos = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Header */}
       <div className="mb-10 relative animate__animated animate__fadeInDown">
         <div className="flex items-center space-x-4 mb-4">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-f1-red to-red-700 flex items-center justify-center shadow-lg hover:animate__animated hover:animate__pulse">
@@ -118,7 +142,6 @@ const Equipos = () => {
         </div>
       </div>
 
-      {/* Grid de equipos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate__animated animate__fadeIn animate__delay-2s">
         {equipos.map((equipo, index) => {
           const delayClass = index === 0 ? 'animate__delay-1s' : 
@@ -136,7 +159,6 @@ const Equipos = () => {
               boxShadow: `0 8px 32px ${getTeamColor(equipo.nombre)}60, 0 0 0 2px ${getTeamColor(equipo.nombre)}80`
             }}
           >
-            {/* Header del equipo */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center space-x-4">
                 <div className="flex items-center justify-center hover:animate__animated hover:animate__pulse">
@@ -165,7 +187,6 @@ const Equipos = () => {
                 </div>
               </div>
 
-              {/* Badge de puntos reales */}
               <div className="text-right hover:animate__animated hover:animate__pulse">
                 <div className="flex items-center space-x-1 justify-end mb-1">
                   <Trophy className="w-3 h-3 text-yellow-400" />
@@ -180,7 +201,6 @@ const Equipos = () => {
               </div>
             </div>
 
-            {/* Lista de pilotos del equipo */}
             <div className="space-y-3">
               <div className="flex items-center space-x-2 text-white/70 text-sm mb-2">
                 <TrendingUp className="w-4 h-4" />
@@ -188,7 +208,7 @@ const Equipos = () => {
               </div>
               
               {equipo.pilotos
-                .sort((a, b) => b.puntos - a.puntos) // Ordenar pilotos por puntos
+                .sort((a, b) => b.puntos - a.puntos)
                 .map((piloto, idx) => {
                   const pilotoDelayClass = idx === 0 ? 'animate__delay-1s' : 
                                          idx === 1 ? 'animate__delay-2s' : 
@@ -204,25 +224,28 @@ const Equipos = () => {
                 >
                   <div className="flex items-center space-x-3">
                     <div className="relative">
-                      {piloto.headshot_url ? (
-                        <div className="w-10 h-10 rounded-lg overflow-hidden shadow-lg hover:scale-110 hover:rotate-3 transition-transform duration-300">
-                          <img 
-                            src={piloto.headshot_url} 
-                            alt={piloto.full_name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.target.parentElement.style.display = 'none';
-                              e.target.parentElement.nextElementSibling.style.display = 'flex';
-                            }}
-                          />
-                        </div>
-                      ) : null}
+                      {(() => {
+                        const driverPhoto = getDriverPhoto(piloto);
+                        return driverPhoto ? (
+                          <div className="w-10 h-10 rounded-lg overflow-hidden shadow-lg hover:scale-110 hover:rotate-3 transition-transform duration-300">
+                            <img 
+                              src={driverPhoto} 
+                              alt={piloto.full_name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.target.parentElement.style.display = 'none';
+                                e.target.parentElement.nextElementSibling.style.display = 'flex';
+                              }}
+                            />
+                          </div>
+                        ) : null;
+                      })()}
                       <div 
                         className="w-10 h-10 rounded-lg flex items-center justify-center hover:scale-110 hover:rotate-3 transition-transform duration-300"
                         style={{
                           background: `linear-gradient(135deg, ${getTeamColor(equipo.color)} 0%, ${getTeamColor(equipo.color)}80 100%)`,
                           boxShadow: `0 4px 10px ${getTeamColor(equipo.color)}40`,
-                          display: piloto.headshot_url ? 'none' : 'flex'
+                          display: getDriverPhoto(piloto) ? 'none' : 'flex'
                         }}
                       >
                         <span className="text-white font-bold text-sm">
@@ -245,7 +268,6 @@ const Equipos = () => {
                     </div>
                   </div>
                   
-                  {/* Puntos del piloto reales */}
                   <div className="text-right hover:scale-105 transition-transform duration-300">
                     <p className="text-white/50 text-xs">Pts</p>
                     <p 
@@ -260,7 +282,6 @@ const Equipos = () => {
                 })}
             </div>
 
-            {/* Barra decorativa con color del equipo */}
             <div
               className={`h-3 rounded-full mt-6 relative overflow-hidden animate__animated animate__fadeInRight ${delayClass}`}
               style={{
@@ -280,10 +301,7 @@ const Equipos = () => {
         })}
       </div>
 
-      {/* Nota informativa */}
-      <div
-        className="mt-10 glass-dark rounded-2xl p-6 text-center animate__animated animate__fadeIn animate__delay-1s"
-      >
+      <div className="mt-10 glass-dark rounded-2xl p-6 text-center animate__animated animate__fadeIn animate__delay-1s">
         <p className="text-white/60 text-sm">
           <strong className="text-white">Datos actualizados:</strong> Los puntos mostrados son calculados en tiempo real 
           basados en los resultados de las carreras de la temporada {selectedYear}.

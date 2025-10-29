@@ -11,9 +11,8 @@ const CardPiloto = ({ piloto, onClick }) => {
   const fotoUrl = getDriverPhoto(piloto) || piloto.headshot_url;
   const banderaUrl = getDriverFlag(piloto);
 
-  // Función para convertir color hex a RGB
   const hexToRgb = (hex) => {
-    if (!hex) return { r: 128, g: 128, b: 128 }; // Color gris por defecto
+    if (!hex) return { r: 128, g: 128, b: 128 };
     
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? {
@@ -25,8 +24,6 @@ const CardPiloto = ({ piloto, onClick }) => {
 
   const teamColor = piloto.team_colour || '#808080';
   const rgb = hexToRgb(teamColor);
-  
-  // Crear gradientes y sombras basados en el color del equipo
   const cardStyle = {
     background: `linear-gradient(135deg, rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15) 0%, rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.08) 50%, rgba(0, 0, 0, 0.4) 100%)`,
     borderColor: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.4)`,

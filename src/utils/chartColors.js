@@ -87,11 +87,20 @@ export const assignColorsToData = (data, nameKey = 'name') => {
  * Colores específicos para equipos de F1 (basados en colores reales)
  */
 export const TEAM_COLORS = {
-  // Nombres completos
-  'Red Bull Racing': '#1e40af', // Azul Red Bull
+  // Nombres exactos de la API de Ergast (2024)
+  'Red Bull Racing Honda RBPT': '#1e40af', // Azul Red Bull
   'Mercedes': '#00d2be', // Verde agua Mercedes
   'Ferrari': '#dc2626', // Rojo Ferrari
-  'McLaren': '#f97316', // Naranja McLaren
+  'McLaren Mercedes': '#f97316', // Naranja McLaren
+  'Alpine Renault': '#0ea5e9', // Azul Alpine
+  'Aston Martin Aramco Mercedes': '#059669', // Verde Aston Martin
+  'Williams Mercedes': '#3b82f6', // Azul Williams
+  'RB Honda RBPT': '#1e40af', // Azul RB (ex AlphaTauri)
+  'Haas Ferrari': '#ef4444', // Rojo Haas
+  'Kick Sauber Ferrari': '#10b981', // Verde Sauber
+  
+  // Nombres completos (fallback)
+  'Red Bull Racing': '#1e40af', // Azul Red Bull
   'Alpine': '#0ea5e9', // Azul Alpine
   'Aston Martin': '#059669', // Verde Aston Martin
   'Williams': '#3b82f6', // Azul Williams
@@ -106,6 +115,7 @@ export const TEAM_COLORS = {
   'Mercedes-AMG': '#00d2be',
   'Scuderia Ferrari': '#dc2626',
   'McLaren F1': '#f97316',
+  'McLaren': '#f97316',
   'Alpine F1': '#0ea5e9',
   'Aston Martin F1': '#059669',
   'Williams Racing': '#3b82f6',
@@ -134,7 +144,48 @@ export const TEAM_COLORS = {
  * @returns {string} Color del equipo o color por defecto
  */
 export const getTeamColor = (teamName) => {
-  return TEAM_COLORS[teamName] || getChartColor(0);
+  if (!teamName) return getChartColor(0);
+  
+  // Búsqueda directa
+  if (TEAM_COLORS[teamName]) {
+    return TEAM_COLORS[teamName];
+  }
+  
+  // Búsqueda por palabras clave (insensible a mayúsculas)
+  const teamNameLower = teamName.toLowerCase();
+  
+  if (teamNameLower.includes('red bull')) {
+    return '#1e40af'; // Azul Red Bull
+  }
+  if (teamNameLower.includes('mercedes')) {
+    return '#00d2be'; // Verde agua Mercedes
+  }
+  if (teamNameLower.includes('ferrari')) {
+    return '#dc2626'; // Rojo Ferrari
+  }
+  if (teamNameLower.includes('mclaren')) {
+    return '#f97316'; // Naranja McLaren
+  }
+  if (teamNameLower.includes('alpine')) {
+    return '#0ea5e9'; // Azul Alpine
+  }
+  if (teamNameLower.includes('aston')) {
+    return '#059669'; // Verde Aston Martin
+  }
+  if (teamNameLower.includes('williams')) {
+    return '#3b82f6'; // Azul Williams
+  }
+  if (teamNameLower.includes('haas')) {
+    return '#ef4444'; // Rojo Haas
+  }
+  if (teamNameLower.includes('sauber') || teamNameLower.includes('kick')) {
+    return '#10b981'; // Verde Sauber
+  }
+  if (teamNameLower.includes('rb') || teamNameLower.includes('racing bulls') || teamNameLower.includes('alphatauri')) {
+    return '#1e40af'; // Azul RB
+  }
+  
+  return getChartColor(0);
 };
 
 /**

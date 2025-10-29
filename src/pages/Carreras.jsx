@@ -20,13 +20,11 @@ const Carreras = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { selectedYear } = useYear();
 
-  // Función para abrir el modal con los detalles de una carrera
   const openRaceModal = (carrera) => {
     setSelectedRace(carrera);
     setIsModalOpen(true);
   };
 
-  // Función para cerrar el modal
   const closeRaceModal = () => {
     setIsModalOpen(false);
     setSelectedRace(null);
@@ -38,7 +36,7 @@ const Carreras = () => {
         setLoading(true);
         setError(null);
         
-        console.log('🔄 Cargando datos de carreras y meetings...');
+  
         
         // Cargar datos en paralelo con timeout
         const timeoutPromise = new Promise((_, reject) => 
@@ -53,10 +51,7 @@ const Carreras = () => {
           timeoutPromise
         ]);
 
-        console.log('✅ Datos cargados exitosamente:', {
-          carreras: carrerasData?.length || 0,
-          meetings: meetingsData?.length || 0
-        });
+
 
         // Filtrar carreras por año seleccionado
         const carrerasFiltradas = carrerasData.filter(carrera => {
@@ -72,7 +67,7 @@ const Carreras = () => {
         
         // Intentar cargar datos básicos como fallback
         try {
-          console.log('🔄 Intentando cargar datos básicos como fallback...');
+  
           const carrerasBasicas = await getRaces();
           const carrerasFiltradas = carrerasBasicas.filter(carrera => {
             const carreraYear = new Date(carrera.date_start).getFullYear();

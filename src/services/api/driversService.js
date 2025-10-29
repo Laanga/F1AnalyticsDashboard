@@ -3,15 +3,8 @@ import { API_CONFIG, getCurrentYear } from '../config/apiConfig.js';
 import { getCachedData, setCachedData, delay, clearCache } from '../utils/cache.js';
 import { getSelectedYear } from '../../hooks/useSelectedYear.js';
 
-/**
- * Servicio para operaciones relacionadas con pilotos
- */
-
-// Función para limpiar caché de pilotos específicamente
 export const clearDriversCache = () => {
-  // Limpiar toda la caché para asegurar datos frescos
   clearCache();
-  console.log('🗑️ Caché de pilotos limpiada');
 };
 
 export const getDrivers = async (year = null) => {
@@ -93,7 +86,6 @@ export const getDrivers = async (year = null) => {
     
     return await getDriversFallback(selectedYear);
   } catch (error) {
-    console.error('❌ Error al obtener pilotos:', error.message);
     return await getDriversFallback(selectedYear);
   }
 };
@@ -141,7 +133,7 @@ const getDriversFallback = async (selectedYear = null) => {
       return driversProcessed;
     }
   } catch (fallbackError) {
-    console.error('❌ Error en fallback de pilotos:', fallbackError.message);
+    // Error en fallback de pilotos
   }
   
   return [];
@@ -158,7 +150,6 @@ export const getDriverByNumber = async (driverNumber) => {
 
     return response.data?.[0] || null;
   } catch (error) {
-    console.error(`❌ Error al obtener piloto #${driverNumber}:`, error.message);
     return null;
   }
 };
@@ -194,7 +185,7 @@ export const getDriversFromErgast = async (year = null) => {
       return processedDrivers;
     }
   } catch (error) {
-    console.error('❌ Error al obtener pilotos desde Ergast:', error.message);
+    // Error al obtener pilotos desde Ergast
   }
   
   return [];

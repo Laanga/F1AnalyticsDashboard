@@ -83,15 +83,13 @@ export const formatearPosicion = (posicion) => {
  * @returns {string} Color en formato hex
  */
 export const getTeamColor = (teamNameOrColor) => {
-  // Si ya es un color hex, devolverlo directamente
-  if (typeof teamNameOrColor === 'string' && teamNameOrColor.startsWith('#')) {
-    console.log('Color hex directo:', teamNameOrColor);
+  // Si ya es un color hex válido, devolverlo directamente
+  if (teamNameOrColor && teamNameOrColor.startsWith('#') && teamNameOrColor.length === 7) {
     return teamNameOrColor;
   }
-
+  
   if (!teamNameOrColor) {
-    console.log('No se proporcionó nombre de equipo - usando color por defecto');
-    return '#e10600'; // Rojo F1 por defecto
+    return '#6B7280'; // Color gris por defecto
   }
   
   // Mapeo de colores específicos por nombre de equipo (temporada 2025)
@@ -125,12 +123,10 @@ export const getTeamColor = (teamNameOrColor) => {
   };
   
   const teamName = teamNameOrColor?.toLowerCase() || '';
-  console.log('Buscando color para equipo:', teamName);
   
   // Buscar coincidencia exacta primero
   for (const [key, color] of Object.entries(teamColorMappings)) {
     if (key.toLowerCase() === teamName) {
-      console.log('Coincidencia exacta encontrada:', key, '->', color);
       return color;
     }
   }
@@ -138,19 +134,16 @@ export const getTeamColor = (teamNameOrColor) => {
   // Buscar coincidencia parcial por nombre
   for (const [key, color] of Object.entries(teamColorMappings)) {
     if (key.toLowerCase().includes(teamName) || teamName.includes(key.toLowerCase())) {
-      console.log('Coincidencia parcial encontrada:', key, '->', color);
       return color;
     }
   }
   
   // Si es un color hex sin #, agregarlo
   if (/^[0-9A-Fa-f]{6}$/.test(teamNameOrColor)) {
-    console.log('Color hex sin # detectado:', teamNameOrColor);
     return `#${teamNameOrColor}`;
   }
   
   // Color por defecto si no se encuentra
-  console.log('No se encontró color para:', teamName, '- usando color por defecto');
   return '#e10600'; // Rojo F1 por defecto
 };
 

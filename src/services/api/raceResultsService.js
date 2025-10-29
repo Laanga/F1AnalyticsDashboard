@@ -26,8 +26,6 @@ export const getRaceResults = async (sessionKey) => {
   }
 
   try {
-    console.log(`🏁 Obteniendo resultados de carrera para sesión ${sessionKey}...`);
-    
     // Intentar obtener resultados usando el endpoint session_result
     const response = await safeRequest(`${API_CONFIG.OPENF1.BASE_URL}/session_result`, {
       params: { session_key: sessionKey }
@@ -36,12 +34,10 @@ export const getRaceResults = async (sessionKey) => {
     if (response.data && response.data.length > 0) {
       const results = response.data.sort((a, b) => (a.position || 999) - (b.position || 999));
       setCachedData(cacheKey, results);
-      console.log(`✅ ${results.length} resultados obtenidos para sesión ${sessionKey}`);
       return results;
     }
 
     // Si no hay resultados en session_result, intentar con position endpoint
-    console.log(`⚠️ No hay resultados en session_result, intentando con position...`);
     const positionResponse = await safeRequest(`${API_CONFIG.OPENF1.BASE_URL}/position`, {
       params: { session_key: sessionKey }
     });
@@ -63,11 +59,9 @@ export const getRaceResults = async (sessionKey) => {
         .sort((a, b) => (a.position || 999) - (b.position || 999));
 
       setCachedData(cacheKey, results);
-      console.log(`✅ ${results.length} posiciones finales obtenidas para sesión ${sessionKey}`);
       return results;
     }
 
-    console.log(`⚠️ No se encontraron resultados para la sesión ${sessionKey}`);
     return [];
 
   } catch (error) {
@@ -95,14 +89,12 @@ export const getSessionDrivers = async (sessionKey) => {
   }
 
   try {
-    console.log(`👥 Obteniendo pilotos para sesión ${sessionKey}...`);
     const response = await safeRequest(`${API_CONFIG.OPENF1.BASE_URL}/drivers`, {
       params: { session_key: sessionKey }
     });
     
     const drivers = response.data || [];
     setCachedData(cacheKey, drivers);
-    console.log(`✅ ${drivers.length} pilotos obtenidos para sesión ${sessionKey}`);
     return drivers;
 
   } catch (error) {
@@ -111,7 +103,6 @@ export const getSessionDrivers = async (sessionKey) => {
     // Intentar usar datos en caché como fallback
     const oldCachedData = getCachedData(cacheKey, true);
     if (oldCachedData && oldCachedData.length > 0) {
-      console.log(`⚠️ Usando datos en caché como fallback para sesión ${sessionKey}`);
       return oldCachedData;
     }
     
@@ -126,15 +117,12 @@ export const getSessionDrivers = async (sessionKey) => {
  */
 export const getCompleteRaceResults = async (sessionKey) => {
   try {
-    console.log(`🏆 Obteniendo resultados completos para sesión ${sessionKey}...`);
-    
     const [results, drivers] = await Promise.all([
       getRaceResults(sessionKey),
       getSessionDrivers(sessionKey)
     ]);
 
     if (results.length === 0) {
-      console.log(`⚠️ No hay resultados disponibles para la sesión ${sessionKey}`);
       return [];
     }
 
@@ -147,7 +135,6 @@ export const getCompleteRaceResults = async (sessionKey) => {
       };
     });
 
-    console.log(`✅ Resultados completos obtenidos: ${completeResults.length} pilotos`);
     return completeResults;
 
   } catch (error) {

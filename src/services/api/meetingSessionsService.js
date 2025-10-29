@@ -21,7 +21,6 @@ export const getMeetingSessions = async (meetingKey) => {
   }
 
   try {
-    console.log(`🏁 Obteniendo sesiones del meeting ${meetingKey}...`);
     const response = await safeRequest(`${API_CONFIG.OPENF1.BASE_URL}/sessions`, {
       params: { meeting_key: meetingKey }
     });
@@ -36,7 +35,6 @@ export const getMeetingSessions = async (meetingKey) => {
     });
 
     setCachedData(cacheKey, sortedSessions);
-    console.log(`✅ ${sortedSessions.length} sesiones obtenidas para meeting ${meetingKey}`);
     return sortedSessions;
   } catch (error) {
     console.error(`❌ Error al obtener sesiones del meeting ${meetingKey}:`, error.message);
@@ -59,8 +57,6 @@ export const getSessionResults = async (sessionKey, sessionType) => {
   }
 
   try {
-    console.log(`📊 Obteniendo resultados de la sesión ${sessionKey} (${sessionType})...`);
-    
     let results = [];
     
     // Para carreras y sprints, intentar primero session_result
@@ -71,7 +67,7 @@ export const getSessionResults = async (sessionKey, sessionType) => {
         });
         results = sessionResultResponse.data || [];
       } catch (error) {
-        console.log(`⚠️ No se encontraron session_result para ${sessionKey}, intentando con position...`);
+        // No se encontraron session_result, intentando con position
       }
     }
     
@@ -101,7 +97,6 @@ export const getSessionResults = async (sessionKey, sessionType) => {
     }
 
     setCachedData(cacheKey, results);
-    console.log(`✅ ${results.length} resultados obtenidos para sesión ${sessionKey}`);
     return results;
   } catch (error) {
     console.error(`❌ Error al obtener resultados de la sesión ${sessionKey}:`, error.message);
@@ -123,14 +118,12 @@ export const getSessionDrivers = async (sessionKey) => {
   }
 
   try {
-    console.log(`👥 Obteniendo pilotos de la sesión ${sessionKey}...`);
     const response = await safeRequest(`${API_CONFIG.OPENF1.BASE_URL}/drivers`, {
       params: { session_key: sessionKey }
     });
     
     const drivers = response.data || [];
     setCachedData(cacheKey, drivers);
-    console.log(`✅ ${drivers.length} pilotos obtenidos para sesión ${sessionKey}`);
     return drivers;
   } catch (error) {
     console.error(`❌ Error al obtener pilotos de la sesión ${sessionKey}:`, error.message);
@@ -152,8 +145,6 @@ export const getCompleteMeetingResults = async (meetingKey) => {
   }
 
   try {
-    console.log(`🏆 Obteniendo resultados completos del meeting ${meetingKey}...`);
-    
     const sessions = await getMeetingSessions(meetingKey);
     const sessionResults = {};
     
@@ -163,8 +154,6 @@ export const getCompleteMeetingResults = async (meetingKey) => {
       const sessionType = session.session_name || session.session_type;
       
       try {
-        console.log(`📊 Procesando sesión ${i + 1}/${sessions.length}: ${sessionType} (${session.session_key})`);
-        
         // Obtener resultados y pilotos secuencialmente
         const results = await getSessionResults(session.session_key, sessionType);
         
@@ -212,7 +201,6 @@ export const getCompleteMeetingResults = async (meetingKey) => {
     };
     
     setCachedData(cacheKey, result);
-    console.log(`✅ Resultados completos obtenidos para meeting ${meetingKey} (${sessions.length} sesiones procesadas)`);
     return result;
     
   } catch (error) {
@@ -221,7 +209,6 @@ export const getCompleteMeetingResults = async (meetingKey) => {
     // Intentar usar datos en caché como fallback
     const oldCachedData = getCachedData(cacheKey, true);
     if (oldCachedData) {
-      console.log(`⚠️ Usando datos en caché como fallback para meeting ${meetingKey}`);
       return oldCachedData;
     }
     

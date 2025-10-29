@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Users, Flag, BarChart3, Zap, TrendingUp } from 'lucide-react';
-import { getDriverStandingsFromErgast, getConstructorStandingsFromErgast, getCurrentYear, getStatistics, getChampionshipStandings, getPointsEvolution } from '../services/openf1Service';
+import { Trophy, Users, Flag, BarChart3, Zap } from 'lucide-react';
+import { getDriverStandingsFromErgast, getConstructorStandingsFromErgast, getCurrentYear, getStatistics, getChampionshipStandings } from '../services/openf1Service';
 import { getChartColor, assignColorsToData, DRIVER_COLORS, getTeamColor, getDriverTeamColor, assignTeamColorsToDrivers } from '../utils/chartColors';
+import { getDriverPhoto } from '../utils/formatUtils';
 import { useYear } from '../contexts/YearContext';
 import GraficaPuntos from '../components/estadisticas/GraficaPuntos';
 import PanelEstadisticas from '../components/estadisticas/PanelEstadisticas';
@@ -15,7 +16,6 @@ import Loader from '../components/ui/Loader';
 const Estadisticas = () => {
   const [stats, setStats] = useState({});
   const [equipos, setEquipos] = useState([]);
-  const [evolutionData, setEvolutionData] = useState({ evolutionData: [], lineConfig: [], totalRaces: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { selectedYear } = useYear();
@@ -24,15 +24,13 @@ const Estadisticas = () => {
     const cargarEstadisticas = async () => {
       try {
         setLoading(true);
-        const [estadisticas, equiposData, evolucionData] = await Promise.all([
+        const [estadisticas, equiposData] = await Promise.all([
           getStatistics(),
-          getChampionshipStandings('constructors'),
-          getPointsEvolution(3)
+          getChampionshipStandings('constructors')
         ]);
         
         setStats(estadisticas);
         setEquipos(equiposData);
-        setEvolutionData(evolucionData);
       } catch (error) {
         console.error('Error al cargar estadísticas:', error);
         setError('Error al cargar las estadísticas');
@@ -52,55 +50,140 @@ const Estadisticas = () => {
     );
   }
 
-  if (!stats) {
+  if (error || !stats || Object.keys(stats).length === 0) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="glass rounded-2xl p-8 text-center">
-          <p className="text-white/70">Error al cargar estadísticas</p>
+          <p className="text-white/70">{error || "Error al cargar estadísticas"}</p>
         </div>
       </div>
     );
   }
 
   // Preparar datos para gráfica de top pilotos (datos reales)
-  const topPilotos = stats.topDrivers.slice(0, 8).map((piloto, index) => ({
+  const topPilotos = stats.topDrivers?.slice(0, 20).map((piloto, index) => ({
     name: piloto.driver?.code || piloto.driver?.familyName || 'Piloto',
     value: parseInt(piloto.points) || 0, // Datos reales de la API
     color: getDriverTeamColor(piloto), // Color del equipo del piloto
     teamName: piloto.constructor?.name || 'Equipo', // Nombre del equipo para referencia
-  }));
+    showDriverPhoto: true, // Indicador para mostrar fotos de pilotos
+    driverData: piloto.driver // Datos completos del piloto para obtener la foto
+  })) || [];
 
-  // Usar datos de evolución detallados de todas las carreras
-  const datosEvolucion = evolutionData.evolutionData || [];
-  
-  // Configuración de líneas para el gráfico de evolución con colores de equipo
-  const lineasEvolucion = evolutionData.lineConfig
-    .map((piloto, index) => ({
-      dataKey: piloto.dataKey,
-      name: piloto.name,
-      color: getDriverTeamColor({ 
-        driver: { code: piloto.name, familyName: piloto.name },
-        constructor: { name: piloto.teamName }
-      }),
-      strokeWidth: 4, // Líneas más gruesas para mejor visibilidad
-      teamName: piloto.teamName,
-      fullName: piloto.fullName,
-      points: piloto.points,
-      position: piloto.position
-    }));
+
+
+  const getTeamLogo = (teamName) => {
+    
+    // Búsqueda directa primero - Nombres exactos de la API de Ergast
+    const teamLogos = {
+      // Red Bull variations (Ergast usa "Red Bull")
+      'Red Bull': '/teams/red-bull.png',
+      'Red Bull Racing': '/teams/red-bull.png',
+      'Oracle Red Bull Racing': '/teams/red-bull.png',
+      
+      // Mercedes variations (Ergast usa "Mercedes")
+      'Mercedes': '/teams/mercedes.png',
+      'Mercedes-AMG Petronas F1 Team': '/teams/mercedes.png',
+      'Mercedes-AMG Petronas': '/teams/mercedes.png',
+      
+      // Ferrari variations (Ergast usa "Ferrari")
+      'Ferrari': '/teams/ferrari.png',
+      'Scuderia Ferrari': '/teams/ferrari.png',
+      'Scuderia Ferrari HP': '/teams/ferrari.png',
+      
+      // McLaren variations (Ergast usa "McLaren")
+      'McLaren': '/teams/mclaren.png',
+      'McLaren F1 Team': '/teams/mclaren.png',
+      'Papaya Rules Racing': '/teams/mclaren.png',
+      
+      // Aston Martin variations (Ergast usa "Aston Martin")
+      'Aston Martin': '/teams/aston-martin.png',
+      'Aston Martin Aramco Cognizant F1 Team': '/teams/aston-martin.png',
+      'Aston Martin Aramco': '/teams/aston-martin.png',
+      
+      // Alpine variations (Ergast usa "Alpine F1 Team")
+      'Alpine': '/teams/alpine.png',
+      'Alpine F1 Team': '/teams/alpine.png',
+      'BWT Alpine F1 Team': '/teams/alpine.png',
+      
+      // Williams variations (Ergast usa "Williams")
+      'Williams': '/teams/williams.png',
+      'Williams Racing': '/teams/williams.png',
+      
+      // Haas variations (Ergast usa "Haas F1 Team")
+      'Haas': '/teams/haas.png',
+      'Haas F1 Team': '/teams/haas.png',
+      'MoneyGram Haas F1 Team': '/teams/haas.png',
+      
+      // Kick Sauber variations (Ergast usa "Kick Sauber")
+      'Kick Sauber': '/teams/kick.png',
+      'Sauber': '/teams/kick.png',
+      'Stake F1 Team Kick Sauber': '/teams/kick.png',
+      
+      // RB variations (Ergast usa "RB F1 Team")
+      'RB': '/teams/visa-red.png',
+      'RB F1 Team': '/teams/visa-red.png',
+      'Racing Bulls': '/teams/visa-red.png',
+      'Visa Cash App RB F1 Team': '/teams/visa-red.png',
+      'AlphaTauri': '/teams/visa-red.png'
+    };
+    
+    // Búsqueda directa
+    if (teamLogos[teamName]) {
+      return teamLogos[teamName];
+    }
+    
+    // Búsqueda por palabras clave (insensible a mayúsculas)
+    const teamNameLower = teamName.toLowerCase();
+    
+    if (teamNameLower.includes('aston')) {
+      return '/teams/aston-martin.png';
+    }
+    if (teamNameLower.includes('sauber') || teamNameLower.includes('kick')) {
+      return '/teams/kick.png';
+    }
+    if (teamNameLower.includes('red bull') || teamNameLower.includes('redbull')) {
+      return '/teams/red-bull.png';
+    }
+    if (teamNameLower.includes('mercedes')) {
+      return '/teams/mercedes.png';
+    }
+    if (teamNameLower.includes('ferrari')) {
+      return '/teams/ferrari.png';
+    }
+    if (teamNameLower.includes('mclaren')) {
+      return '/teams/mclaren.png';
+    }
+    if (teamNameLower.includes('alpine')) {
+      return '/teams/alpine.png';
+    }
+    if (teamNameLower.includes('williams')) {
+      return '/teams/williams.png';
+    }
+    if (teamNameLower.includes('haas')) {
+      return '/teams/haas.png';
+    }
+    if (teamNameLower.includes('rb') || teamNameLower.includes('racing bulls') || teamNameLower.includes('alphatauri')) {
+      return '/teams/visa-red.png';
+    }
+    
+    return '/teams/red-bull.png';
+  };
 
   // Preparar datos para gráfica de equipos (datos reales)
   const datosEquipos = (equipos?.constructors || [])
     .sort((a, b) => (b.points || 0) - (a.points || 0)) // Ordenar por puntos descendente
     .slice(0, 10) // Top 10 equipos
     .map(equipo => ({
-      name: equipo.team_name && equipo.team_name.length > 15 ? 
-        equipo.team_name.substring(0, 15) + '...' : 
-        equipo.team_name || 'Equipo',
+      name: equipo.team_name || 'Equipo',
       value: parseInt(equipo.points) || 0, // Datos reales de puntos
       color: getTeamColor(equipo.team_name || ''), // Color específico del equipo
-      teamName: equipo.team_name || 'Equipo' // Nombre completo para referencia
+      teamName: equipo.team_name || 'Equipo', // Nombre completo para referencia
+      logo: getTeamLogo(equipo.team_name || 'Equipo'), // Logo del equipo
+      showLogo: true // Flag para indicar que debe mostrar logo
     }));
+
+
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -119,120 +202,12 @@ const Estadisticas = () => {
         </p>
       </motion.div>
 
-      {/* Grid de paneles de estadísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-        <PanelEstadisticas
-          titulo="Total de Pilotos"
-          valor={stats.totalDrivers}
-          descripcion={`Activos en ${selectedYear}`}
-          icono={Users}
-          tendencia="arriba"
-          delay={0}
-        />
-        
-        <PanelEstadisticas
-          titulo="Carreras"
-          valor={stats.totalRaces}
-          descripcion="Completadas"
-          icono={Flag}
-          delay={0.1}
-        />
-        
-        <PanelEstadisticas
-          titulo="Sesiones Totales"
-          valor={stats.totalSessions}
-          descripcion="Práctica, clasificación y carrera"
-          icono={BarChart3}
-          delay={0.2}
-        />
-        
-        <PanelEstadisticas
-          titulo="Rendimiento"
-          valor="94%"
-          descripcion="Precisión de datos"
-          icono={Zap}
-          tendencia="arriba"
-          delay={0.3}
-        />
-      </div>
 
-      {/* Gráfico de Evolución de Puntos - Sección Principal */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        className="mb-10"
-      >
-        <div className="bg-gradient-to-br from-f1-dark/80 to-gray-900/80 backdrop-blur-md rounded-2xl border border-gray-700/50 overflow-hidden">
-          {/* Header del gráfico */}
-          <div className="p-8 pb-4">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-3xl font-bold text-white flex items-center gap-3">
-                 <TrendingUp className="w-8 h-8 text-f1-red" />
-                 Evolución de Puntos - Top 3 Pilotos
-               </h2>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                  <span className="text-sm text-gray-400 font-medium">
-                    {evolutionData.racesWithResults || 0} con resultados
-                  </span>
-                </div>
-                {evolutionData.futureRacesShown > 0 && (
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-blue-400"></div>
-                    <span className="text-sm text-gray-400 font-medium">
-                      {evolutionData.futureRacesShown} próximas
-                    </span>
-                  </div>
-                )}
-                <div className="text-xs text-gray-500">
-                  ({evolutionData.racesShown || 0} de {evolutionData.totalRaces || 0} mostradas)
-                </div>
-              </div>
-            </div>
-            <p className="text-gray-400 text-lg mb-6">
-              Progresión de puntos a lo largo de la temporada {selectedYear}
-            </p>
-            
-            {/* Leyenda de pilotos */}
-            {lineasEvolucion.length > 0 && (
-              <div className="flex flex-wrap gap-6 mb-6">
-                {lineasEvolucion.map((linea, index) => (
-                  <div key={linea.dataKey} className="flex items-center gap-3">
-                    <div 
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: linea.color }}
-                    ></div>
-                    <span className="text-white text-lg font-semibold">
-                      {linea.fullName || linea.name}
-                    </span>
-                    <span className="text-gray-400 text-sm font-medium">
-                      ({linea.points} pts)
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          
-          {/* Gráfico */}
-          <div className="px-8 pb-8">
-            <div className="h-96">
-              <GraficaPuntos
-                datos={datosEvolucion}
-                tipo="linea"
-                titulo=""
-                lineas={lineasEvolucion}
-                showTitle={false}
-              />
-            </div>
-          </div>
-        </div>
-      </motion.div>
+
+
 
       {/* Gráficas secundarias */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+      <div className="grid grid-cols-1 gap-6 mb-10">
         {/* Top pilotos */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -242,7 +217,7 @@ const Estadisticas = () => {
           <GraficaPuntos
             datos={topPilotos}
             tipo="barra"
-            titulo="Top 8 Pilotos - Puntos del Campeonato"
+            titulo="Top 20 Pilotos - Puntos del Campeonato"
           />
         </motion.div>
 
@@ -260,43 +235,163 @@ const Estadisticas = () => {
         </motion.div>
       </div>
 
-      {/* Top Drivers */}
-      <motion.div
+      {/* Clasificación de Pilotos */}
+      <motion.div 
+        className="glass glass-hover rounded-3xl p-8 shadow-glass mb-10"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="bg-gradient-to-br from-f1-dark/80 to-gray-900/80 backdrop-blur-md rounded-xl p-6 border border-gray-700/50 mb-10"
+        transition={{ delay: 0.4, duration: 0.6 }}
       >
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold text-white flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-yellow-400" />
-            Top 5 Pilotos
-          </h3>
-          <div className="flex items-center gap-2">
+        <div className="flex items-center space-x-3 mb-8">
+          <motion.div
+            whileHover={{ scale: 1.1, rotate: 5 }}
+            transition={{ type: "spring", stiffness: 400, damping: 10 }}
+          >
+            <Trophy className="w-8 h-8 text-f1-red" />
+          </motion.div>
+          <h2 className="text-3xl font-bold text-white text-glow">Clasificación de Pilotos</h2>
+          <div className="flex items-center gap-2 ml-auto">
             <div className={`w-2 h-2 rounded-full ${stats.dataSource === 'real' ? 'bg-green-400' : 'bg-yellow-400'}`}></div>
             <span className="text-xs text-gray-400">
               {stats.dataSource === 'real' ? 'Datos Reales' : 'Datos Base'}
             </span>
           </div>
         </div>
-        <div className="space-y-3">
+        
+        <div className="space-y-4">
           {stats.topDrivers?.length > 0 ? (
-            stats.topDrivers.slice(0, 5).map((driver, index) => (
-              <div key={driver.driver_number || index} className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <span className="w-8 h-8 bg-f1-red rounded-full flex items-center justify-center text-white font-bold text-sm">
-                    {driver.position || index + 1}
-                  </span>
-                  <div>
-                    <p className="text-white font-medium">{driver.driver?.givenName} {driver.driver?.familyName}</p>
-                    <p className="text-gray-400 text-sm">{driver.constructor?.name}</p>
+            stats.topDrivers.slice(0, 20).map((driver, index) => (
+              <motion.div
+                key={driver.driver_number || index}
+                className={`
+                  glass glass-hover rounded-2xl p-6 border transition-all duration-300
+                  ${index < 3 
+                    ? `border-yellow-400/30 bg-gradient-to-r ${
+                        index === 0 ? 'from-yellow-400/20 to-yellow-600/10' :
+                        index === 1 ? 'from-gray-300/20 to-gray-500/10' :
+                        'from-amber-600/20 to-amber-800/10'
+                      }` 
+                    : 'border-white/10 hover:border-f1-red/30'
+                  }
+                `}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 * index, duration: 0.5 }}
+                whileHover={{ 
+                  scale: 1.02, 
+                  y: -2,
+                  boxShadow: "0 10px 30px rgba(225, 6, 0, 0.2)"
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-6">
+                    {/* Posición */}
+                    <motion.div 
+                      className={`
+                        relative w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg overflow-hidden
+                        ${index === 0 
+                          ? 'bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 text-black border border-yellow-300/50' :
+                          index === 1 
+                          ? 'bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 text-black border border-gray-200/50' :
+                          index === 2 
+                          ? 'bg-gradient-to-br from-amber-600 via-amber-700 to-amber-800 text-white border border-amber-500/50' :
+                          'bg-gradient-to-br from-slate-600 via-slate-700 to-slate-800 text-white border border-slate-500/50'
+                        }
+                        backdrop-blur-sm shadow-2xl
+                      `}
+                      whileHover={{ 
+                        scale: 1.15, 
+                        rotate: 3,
+                        boxShadow: index < 3 
+                          ? index === 0 ? "0 20px 40px rgba(251, 191, 36, 0.4)" :
+                            index === 1 ? "0 20px 40px rgba(156, 163, 175, 0.4)" :
+                            "0 20px 40px rgba(217, 119, 6, 0.4)"
+                          : "0 20px 40px rgba(71, 85, 105, 0.4)"
+                      }}
+                      whileTap={{ scale: 0.95 }}
+                      transition={{ 
+                        type: "spring", 
+                        stiffness: 400, 
+                        damping: 10,
+                        duration: 0.3
+                      }}
+                    >
+                      {/* Efecto shimmer para posiciones del podio */}
+                      {index < 3 && (
+                        <motion.div
+                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                          initial={{ x: '-100%' }}
+                          animate={{ x: '100%' }}
+                          transition={{
+                            repeat: Infinity,
+                            duration: 2,
+                            ease: "easeInOut"
+                          }}
+                          style={{ clipPath: 'inset(0 0 0 0 round 16px)' }}
+                        />
+                      )}
+                      
+                      {/* Número de posición */}
+                      <span className="relative z-10 font-extrabold tracking-tight">
+                        {driver.position || index + 1}
+                      </span>
+                    </motion.div>
+
+                    {/* Foto del piloto */}
+                    <motion.div 
+                      className="relative"
+                      whileHover={{ scale: 1.1, rotate: 3 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                    >
+                      <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 bg-gradient-to-br from-slate-800 to-slate-900">
+                        <img
+                          src={getDriverPhoto(driver.driver) || '/drivers/default.png'}
+                          alt={`${driver.driver?.givenName} ${driver.driver?.familyName}`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.src = '/drivers/default.png';
+                          }}
+                        />
+                      </div>
+                      {/* Efecto de brillo */}
+                      <motion.div
+                        className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-0"
+                        whileHover={{ opacity: 1 }}
+                        transition={{ duration: 0.3 }}
+                      />
+                    </motion.div>
+
+                    {/* Información del piloto */}
+                    <div className="flex-1">
+                      <h3 className="text-white font-bold text-xl mb-1">
+                        {driver.driver?.givenName} {driver.driver?.familyName}
+                      </h3>
+                      <p className="text-white/60 text-sm font-medium">
+                        {driver.constructor?.name}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Estadísticas */}
+                  <div className="flex items-center space-x-8">
+                    <motion.div 
+                      className="text-center"
+                      whileHover={{ scale: 1.05 }}
+                    >
+                      <p className="text-2xl font-bold text-white">{driver.points || 0}</p>
+                      <p className="text-white/60 text-sm">Puntos</p>
+                    </motion.div>
+                    
+                    <motion.div 
+                      className="text-center"
+                      whileHover={{ scale: 1.05 }}
+                    >
+                      <p className="text-2xl font-bold text-yellow-400">{driver.wins || 0}</p>
+                      <p className="text-white/60 text-sm">Victorias</p>
+                    </motion.div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-white font-bold">{driver.points || 0} pts</p>
-                  <p className="text-gray-400 text-sm">{driver.wins || 0} victorias</p>
-                </div>
-              </div>
+              </motion.div>
             ))
           ) : (
             <div className="text-center py-4">
@@ -306,71 +401,7 @@ const Estadisticas = () => {
         </div>
       </motion.div>
 
-      {/* Podio Actual */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
-        className="bg-gradient-to-br from-f1-dark/80 to-gray-900/80 backdrop-blur-md rounded-xl p-6 border border-gray-700/50 mb-10"
-      >
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-white flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-yellow-400" />
-            Podio Actual
-          </h3>
-          <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${stats.dataSource === 'real' ? 'bg-green-400' : 'bg-yellow-400'}`}></div>
-            <span className="text-xs text-gray-400">
-              {stats.dataSource === 'real' ? 'Clasificación Real' : 'Sin Datos'}
-            </span>
-          </div>
-        </div>
-        
-        {stats.topDrivers?.length >= 3 ? (
-          <div className="flex justify-center items-end gap-4">
-            {/* Segundo lugar */}
-            <div className="text-center">
-              <div className="w-16 h-20 bg-gradient-to-t from-gray-600 to-gray-400 rounded-t-lg flex items-end justify-center pb-2">
-                <span className="text-white font-bold text-lg">2</span>
-              </div>
-              <div className="mt-2">
-                <p className="text-white font-medium text-sm">{stats.topDrivers[1]?.driver?.code || stats.topDrivers[1]?.driver?.familyName}</p>
-                <p className="text-gray-400 text-xs">{stats.topDrivers[1]?.constructor?.name}</p>
-                <p className="text-yellow-400 font-bold text-sm">{stats.topDrivers[1]?.points || 0} pts</p>
-              </div>
-            </div>
-            
-            {/* Primer lugar */}
-            <div className="text-center">
-              <div className="w-16 h-24 bg-gradient-to-t from-yellow-600 to-yellow-400 rounded-t-lg flex items-end justify-center pb-2">
-                <span className="text-white font-bold text-lg">1</span>
-              </div>
-              <div className="mt-2">
-                <p className="text-white font-medium text-sm">{stats.topDrivers[0]?.driver?.code || stats.topDrivers[0]?.driver?.familyName}</p>
-                <p className="text-gray-400 text-xs">{stats.topDrivers[0]?.constructor?.name}</p>
-                <p className="text-yellow-400 font-bold text-sm">{stats.topDrivers[0]?.points || 0} pts</p>
-              </div>
-            </div>
-            
-            {/* Tercer lugar */}
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-t from-orange-800 to-orange-600 rounded-t-lg flex items-end justify-center pb-2">
-                <span className="text-white font-bold text-lg">3</span>
-              </div>
-              <div className="mt-2">
-                <p className="text-white font-medium text-sm">{stats.topDrivers[2]?.driver?.code || stats.topDrivers[2]?.driver?.familyName}</p>
-                <p className="text-gray-400 text-xs">{stats.topDrivers[2]?.constructor?.name}</p>
-                <p className="text-yellow-400 font-bold text-sm">{stats.topDrivers[2]?.points || 0} pts</p>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-gray-400">No hay suficientes datos para mostrar el podio</p>
-            <p className="text-gray-500 text-sm mt-2">Se necesitan al menos 3 pilotos con puntos</p>
-          </div>
-        )}
-      </motion.div>
+
 
       {/* Clasificación de Constructores */}
       <ClasificacionConstructores />
@@ -385,7 +416,7 @@ const Estadisticas = () => {
         {/* Récords */}
         <div className="glass rounded-2xl p-6">
           <h3 className="text-xl font-bold text-white mb-4 flex items-center space-x-2">
-            <TrendingUp className="w-5 h-5 text-f1-red" />
+            <Trophy className="w-5 h-5 text-f1-red" />
             <span>Récords de la Temporada</span>
           </h3>
           

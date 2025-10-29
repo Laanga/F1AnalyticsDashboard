@@ -44,7 +44,6 @@ const circuitCountryMapping = {
   'kyalami': 'ZA'
 };
 
-// Función para obtener código de país desde el nombre del circuito
 const getCountryFromCircuit = (circuitName, circuitId) => {
   // Primero intentar con el ID del circuito
   if (circuitId && circuitCountryMapping[circuitId]) {
@@ -100,7 +99,7 @@ export const getStatistics = async () => {
   }
 
   try {
-    console.log('📊 Generando estadísticas...');
+  
     
     // Obtener datos base
     const [drivers, sessions, meetings] = await Promise.all([
@@ -145,7 +144,7 @@ export const getStatistics = async () => {
 
     if (hasRealData) {
       // Usar datos reales
-      statistics.topDrivers = driverStandings.slice(0, 10);
+      statistics.topDrivers = driverStandings.slice(0, 20);
       statistics.topConstructors = constructorStandings.slice(0, 10);
       statistics.championshipLeader = driverStandings[0] || null;
       statistics.constructorLeader = constructorStandings[0] || null;
@@ -154,7 +153,7 @@ export const getStatistics = async () => {
     }
 
     setCachedData(cacheKey, statistics);
-    console.log(`✅ Estadísticas generadas (${dataSource === 'real' ? 'DATOS REALES' : 'DATOS BASE'})`);
+
     return statistics;
 
   } catch (error) {
@@ -191,7 +190,7 @@ const getRaceCalendarFromErgast = async (year) => {
   }
 
   try {
-    console.log(`📅 Obteniendo calendario completo desde Ergast para ${year}...`);
+  
     
     // Usar el endpoint específico para carreras/rondas
     const response = await fetch(`https://api.jolpi.ca/ergast/f1/${year}/races.json`);
@@ -203,7 +202,7 @@ const getRaceCalendarFromErgast = async (year) => {
     }
 
     const races = data.MRData.RaceTable.Races;
-    console.log(`✅ ${races.length} carreras programadas obtenidas para ${year} usando endpoint /races/`);
+
     
     setCachedData(cacheKey, races);
     return races;
@@ -224,7 +223,7 @@ export const getPointsEvolution = async (topCount = 3) => {
   }
 
   try {
-    console.log(`📈 Generando evolución de puntos para top ${topCount} pilotos en ${selectedYear} usando driver standings...`);
+  
     
     // Obtener el calendario completo de carreras
     const raceCalendar = await getRaceCalendarFromErgast(selectedYear);
@@ -350,7 +349,7 @@ export const getPointsEvolution = async (topCount = 3) => {
     };
 
     setCachedData(cacheKey, result);
-    console.log(`✅ Evolución de puntos generada usando driver standings: ${result.racesShown} carreras mostradas (${result.racesWithResults} con resultados, ${result.futureRacesShown} futuras) de ${result.totalRaces} totales`);
+
     
     return result;
 
@@ -370,7 +369,7 @@ export const getSeasonProgress = async () => {
   }
 
   try {
-    console.log('📈 Calculando progreso de temporada...');
+  
     
     const sessions = await getSessions('Race');
     const totalRaces = getTotalRacesForYear(selectedYear);
@@ -386,7 +385,7 @@ export const getSeasonProgress = async () => {
     };
 
     setCachedData(cacheKey, progress);
-    console.log(`✅ Progreso calculado: ${progress.progressPercentage}%`);
+
     return progress;
 
   } catch (error) {

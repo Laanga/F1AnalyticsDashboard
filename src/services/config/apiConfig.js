@@ -59,18 +59,8 @@ export const getCurrentYear = () => {
 
 // Obtener la temporada F1 activa (considera que la temporada puede empezar en marzo)
 export const getCurrentF1Season = () => {
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth() + 1; // getMonth() devuelve 0-11
-  
-  // Si estamos en enero o febrero, la temporada activa podría ser la del año anterior
-  // (dependiendo de cuándo termine la temporada anterior)
-  if (currentMonth <= 2) {
-    // Verificar si hay datos del año actual, si no, usar el año anterior
-    return currentYear - 1;
-  }
-  
-  return currentYear;
+  // Estamos en octubre de 2025, usar 2025
+  return 2025;
 };
 
 // Obtener años disponibles para el selector

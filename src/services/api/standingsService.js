@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { API_CONFIG, getCurrentYear } from '../config/apiConfig.js';
-import { getCachedData, setCachedData } from '../utils/cache.js';
+import { getCachedData, setCachedData, clearCache } from '../utils/cache.js';
 import { getSelectedYear } from '../../hooks/useSelectedYear.js';
 import { getTeamColor } from '../../utils/formatUtils.js';
 
@@ -18,7 +18,6 @@ export const getDriverStandingsFromErgast = async () => {
   }
 
   try {
-    console.log(`🏆 Obteniendo clasificación de pilotos desde Ergast para ${selectedYear}...`);
     const response = await axios.get(`${API_CONFIG.JOLPICA.BASE_URL}/${selectedYear}/driverstandings.json`);
     
     if (response.data?.MRData?.StandingsTable?.StandingsLists?.[0]?.DriverStandings) {
@@ -44,7 +43,6 @@ export const getDriverStandingsFromErgast = async () => {
       }));
 
       setCachedData(cacheKey, processedStandings);
-      console.log(`✅ ${processedStandings.length} clasificaciones de pilotos obtenidas desde Ergast`);
       return processedStandings;
     }
   } catch (error) {
@@ -64,7 +62,6 @@ export const getConstructorStandingsFromErgast = async () => {
   }
 
   try {
-    console.log(`🏗️ Obteniendo clasificación de constructores desde Ergast para ${selectedYear}...`);
     const response = await axios.get(`${API_CONFIG.JOLPICA.BASE_URL}/${selectedYear}/constructorstandings.json`);
     
     if (response.data?.MRData?.StandingsTable?.StandingsLists?.[0]?.ConstructorStandings) {
@@ -82,12 +79,10 @@ export const getConstructorStandingsFromErgast = async () => {
           }
         };
 
-        console.log('Constructor data:', standing.Constructor.name, '-> color:', getTeamColor(standing.Constructor.name));
         return constructorData;
       });
 
       setCachedData(cacheKey, processedStandings);
-      console.log(`✅ ${processedStandings.length} clasificaciones de constructores obtenidas desde Ergast`);
       return processedStandings;
     }
   } catch (error) {
@@ -106,7 +101,6 @@ export const getDriverStandings = async () => {
     }
     
     // Fallback a datos base de OpenF1 (sin puntos simulados)
-    console.log('⚠️ Usando datos base de OpenF1 para clasificación de pilotos');
     return [];
   } catch (error) {
     console.error('❌ Error al obtener clasificación de pilotos:', error.message);
@@ -123,7 +117,6 @@ export const getConstructorStandings = async () => {
     }
     
     // Fallback a datos base de OpenF1 (sin puntos simulados)
-    console.log('⚠️ Usando datos base de OpenF1 para clasificación de constructores');
     return [];
   } catch (error) {
     console.error('❌ Error al obtener clasificación de constructores:', error.message);
@@ -131,23 +124,28 @@ export const getConstructorStandings = async () => {
   }
 };
 
-export const getChampionshipStandings = async () => {
-  const currentYear = getCurrentYear();
-  const cacheKey = `championship_standings_${currentYear}`;
-  
-  const cachedData = getCachedData(cacheKey);
-  if (cachedData) {
-    return cachedData;
-  }
-
+export const getChampionshipStandings = async (year = null) => {
   try {
-    console.log(`🏆 Obteniendo clasificación del campeonato para ${currentYear}...`);
+    // TEMPORAL: Forzar año 2024 para obtener datos
+    const selectedYear = 2024;
+    const cacheKey = `championship_standings_${selectedYear}`;
+    
+    // TEMPORAL: Limpiar cache para forzar actualización
+    clearCache();
+    
+    // Verificar cache primero
+    const cachedData = getCachedData(cacheKey);
+    if (cachedData) {
+      return applyTeamCorrections(cachedData);
+    }
     
     // Obtener datos de pilotos y constructores
     const [driverStandings, constructorStandings] = await Promise.all([
       getDriverStandingsFromErgast(),
       getConstructorStandingsFromErgast()
     ]);
+
+
 
     if (driverStandings && constructorStandings) {
       // Agrupar pilotos por constructor
@@ -189,18 +187,73 @@ export const getChampionshipStandings = async () => {
         }))
       };
 
-      setCachedData(cacheKey, result);
-      console.log(`✅ Clasificación del campeonato obtenida: ${constructorsWithDrivers.length} constructores`);
-      return result;
+      // Aplicar correcciones manuales
+      const correctedResult = applyTeamCorrections(result);
+      
+      setCachedData(cacheKey, correctedResult);
+      return correctedResult;
     }
   } catch (error) {
     console.error('❌ Error al obtener clasificación del campeonato:', error.message);
   }
 
   // Fallback: devolver estructura vacía
-  console.log('⚠️ Usando datos base para clasificación del campeonato');
   return {
     constructors: [],
     drivers: []
   };
+};
+
+/**
+ * Aplica correcciones manuales a las asignaciones de equipos
+ * @param {Object} data - Datos de standings
+ * @returns {Object} Datos corregidos
+ */
+const applyTeamCorrections = (data) => {
+  // Solo aplicar correcciones específicas para Tsunoda y Lawson
+  data.drivers = data.drivers.map(driver => {
+    const driverKey = driver.name_acronym?.toLowerCase();
+    const fullNameKey = driver.full_name?.toLowerCase();
+    
+    // Corrección específica para Tsunoda - DEBE IR A RED BULL RACING
+    if (driverKey === 'tsu' || (fullNameKey && fullNameKey.includes('tsunoda'))) {
+      return {
+        ...driver,
+        team_name: 'Red Bull Racing',
+        team_colour: getTeamColor('Red Bull Racing')
+      };
+    }
+    
+    // Corrección específica para Lawson - DEBE IR A RB F1 TEAM
+    if (driverKey === 'law' || (fullNameKey && fullNameKey.includes('lawson'))) {
+      return {
+        ...driver,
+        team_name: 'RB F1 Team',
+        team_colour: getTeamColor('RB F1 Team')
+      };
+    }
+    
+    // Para todos los demás pilotos, mantener sus datos originales
+    return driver;
+  });
+
+  // Corregir constructors - actualizar los drivers con las correcciones aplicadas
+  data.constructors = data.constructors.map(constructor => {
+    const updatedDrivers = constructor.drivers.map(driver => {
+      // Buscar el driver corregido en la lista de drivers por acrónimo
+      const correctedDriver = data.drivers.find(d => 
+        d.name_acronym === driver.name_acronym
+      );
+      return correctedDriver || driver;
+    });
+
+    return {
+      ...constructor,
+      drivers: updatedDrivers
+    };
+  });
+
+
+
+  return data;
 };
