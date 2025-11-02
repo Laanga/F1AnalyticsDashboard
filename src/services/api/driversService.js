@@ -7,8 +7,9 @@ export const clearDriversCache = () => {
   clearCache();
 };
 
-export const getDrivers = async (year = null) => {
-  const selectedYear = year || getSelectedYear();
+export const getDrivers = async (options = {}) => {
+  const { signal } = options;
+  const selectedYear = getSelectedYear();
   const currentYear = getCurrentYear();
   const cacheKey = `drivers_${selectedYear}`;
   
@@ -27,9 +28,10 @@ export const getDrivers = async (year = null) => {
         axios.get(`${API_CONFIG.OPENF1.BASE_URL}/drivers`, {
           params: {
             session_key: 'latest'
-          }
+          },
+          signal
         }),
-        getDriversFromErgast(selectedYear)
+        getDriversFromErgast({ signal })
       ]);
 
       if (openF1Response.data && openF1Response.data.length > 0) {
@@ -64,7 +66,7 @@ export const getDrivers = async (year = null) => {
     }
     
     // Para años históricos o si OpenF1 falla, usar solo Ergast
-    const ergastDrivers = await getDriversFromErgast(selectedYear);
+    const ergastDrivers = await getDriversFromErgast();
     
     if (ergastDrivers && ergastDrivers.length > 0) {
       // Procesar datos de Ergast para formato consistente
@@ -86,17 +88,21 @@ export const getDrivers = async (year = null) => {
     
     return await getDriversFallback(selectedYear);
   } catch (error) {
-    return await getDriversFallback(selectedYear);
+    // Ignorar errores de cancelación - es comportamiento normal con AbortController
+    if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+      return await getDriversFallback();
+    }
+    return await getDriversFallback();
   }
 };
 
-const getDriversFallback = async (selectedYear = null) => {
-  const year = selectedYear || getSelectedYear();
+const getDriversFallback = async () => {
+  const year = getSelectedYear();
   
   try {
     // Para años históricos, intentar solo con Ergast
     if (year !== getCurrentYear()) {
-      const ergastDrivers = await getDriversFromErgast(year);
+      const ergastDrivers = await getDriversFromErgast();
       if (ergastDrivers && ergastDrivers.length > 0) {
         return ergastDrivers.map((driver, index) => ({
           driver_number: driver.permanentNumber || index + 1,
@@ -154,8 +160,9 @@ export const getDriverByNumber = async (driverNumber) => {
   }
 };
 
-export const getDriversFromErgast = async (year = null) => {
-  const selectedYear = year || getSelectedYear();
+export const getDriversFromErgast = async (options = {}) => {
+  const { signal } = options;
+  const selectedYear = getSelectedYear();
   const cacheKey = `drivers_ergast_${selectedYear}`;
   
   const cachedData = getCachedData(cacheKey);
@@ -164,7 +171,7 @@ export const getDriversFromErgast = async (year = null) => {
   }
 
   try {
-    const response = await axios.get(`${API_CONFIG.JOLPICA.BASE_URL}/${selectedYear}/drivers.json`);
+    const response = await axios.get(`${API_CONFIG.JOLPICA.BASE_URL}/${selectedYear}/drivers.json`, { signal });
     
     if (response.data?.MRData?.DriverTable?.Drivers) {
       const drivers = response.data.MRData.DriverTable.Drivers;
@@ -185,6 +192,10 @@ export const getDriversFromErgast = async (year = null) => {
       return processedDrivers;
     }
   } catch (error) {
+    // Ignorar errores de cancelación
+    if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+      return [];
+    }
     // Error al obtener pilotos desde Ergast
   }
   

@@ -31,12 +31,13 @@ const Carreras = () => {
   };
 
   useEffect(() => {
+    const controller = new AbortController();
+    const { signal } = controller;
+
     const cargarDatos = async () => {
       try {
         setLoading(true);
         setError(null);
-        
-  
         
         // Cargar datos en paralelo con timeout
         const timeoutPromise = new Promise((_, reject) => 
@@ -45,8 +46,8 @@ const Carreras = () => {
         
         const [carrerasData, meetingsData] = await Promise.race([
           Promise.all([
-            getRaces(),
-            getMeetings()
+            getRaces({ signal }),
+            getMeetings({ signal })
           ]),
           timeoutPromise
         ]);
@@ -68,7 +69,7 @@ const Carreras = () => {
         // Intentar cargar datos básicos como fallback
         try {
   
-          const carrerasBasicas = await getRaces();
+          const carrerasBasicas = await getRaces({ signal });
           const carrerasFiltradas = carrerasBasicas.filter(carrera => {
             const carreraYear = new Date(carrera.date_start).getFullYear();
             return carreraYear === selectedYear;
@@ -87,7 +88,11 @@ const Carreras = () => {
     };
 
     cargarDatos();
-  }, [selectedYear]);
+    
+    return () => {
+      controller.abort();
+    };
+  }, []);
 
 
 

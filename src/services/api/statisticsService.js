@@ -89,7 +89,8 @@ const getCountryFromCircuit = (circuitName, circuitId) => {
  * Servicio para estadísticas y análisis de datos
  */
 
-export const getStatistics = async () => {
+export const getStatistics = async (options = {}) => {
+  const { signal } = options;
   const selectedYear = getSelectedYear();
   const cacheKey = `statistics_${selectedYear}`;
   
@@ -103,9 +104,9 @@ export const getStatistics = async () => {
     
     // Obtener datos base
     const [drivers, sessions, meetings] = await Promise.all([
-      getDrivers(),
+      getDrivers({ signal }),
       getSessions(),
-      getMeetings()
+      getMeetings({ signal })
     ]);
 
     // Intentar obtener datos reales de clasificaciones

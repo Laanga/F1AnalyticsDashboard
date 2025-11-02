@@ -20,7 +20,7 @@ export const getSessions = async (sessionName = null) => {
     
     const sessions = response.data || [];
     
-    if (!sessions || sessions.length === 0) {
+    if (!Array.isArray(sessions) || sessions.length === 0) {
       const cachedData = getCachedData(cacheKey);
       if (cachedData) {
         return cachedData;
@@ -56,7 +56,7 @@ export const getFutureRacesFromErgast = async (year) => {
   }
 
   try {
-    const response = await axios.get(`${API_CONFIG.ERGAST.BASE_URL}/${year}.json`);
+    const response = await axios.get(`${API_CONFIG.JOLPICA.BASE_URL}/${year}.json`);
     
     if (response.data?.MRData?.RaceTable?.Races) {
       const races = response.data.MRData.RaceTable.Races;
@@ -99,7 +99,8 @@ export const getFutureRacesFromErgast = async (year) => {
   return [];
 };
 
-export const getRaces = async () => {
+export const getRaces = async (options = {}) => {
+  const { signal } = options;
   const selectedYear = getSelectedYear();
   const currentYear = getCurrentYear();
   
@@ -163,7 +164,7 @@ export const getFutureMeetingsFromErgast = async (year) => {
   }
 
   try {
-    const response = await axios.get(`${API_CONFIG.ERGAST.BASE_URL}/${year}.json`);
+    const response = await axios.get(`${API_CONFIG.JOLPICA.BASE_URL}/${year}.json`);
     
     if (response.data?.MRData?.RaceTable?.Races) {
       const races = response.data.MRData.RaceTable.Races;
@@ -205,7 +206,8 @@ export const getFutureMeetingsFromErgast = async (year) => {
   return [];
 };
 
-export const getMeetings = async () => {
+export const getMeetings = async (options = {}) => {
+  const { signal } = options;
   const selectedYear = getSelectedYear();
   const currentYear = getCurrentYear();
   const cacheKey = `meetings_${selectedYear}`;
@@ -216,7 +218,7 @@ export const getMeetings = async () => {
   }
 
   try {
-    const response = await axios.get(`${API_CONFIG.OPENF1.BASE_URL}/meetings`);
+    const response = await axios.get(`${API_CONFIG.OPENF1.BASE_URL}/meetings`, { signal });
     const meetings = response.data || [];
     
     const selectedYearMeetings = meetings.filter(meeting => {

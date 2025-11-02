@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getCurrentF1Season, getAvailableYears } from '../services/config/apiConfig';
+import React, { createContext, useContext, useMemo } from 'react';
+import { getCurrentF1Season } from '../services/config/apiConfig';
 
 const YearContext = createContext();
 
@@ -12,21 +12,13 @@ export const useYear = () => {
 };
 
 export const YearProvider = ({ children }) => {
-  // Usar siempre el año actual por defecto
-  const [selectedYear] = useState(getCurrentF1Season());
-  const [availableYears, setAvailableYears] = useState([]);
+  // Siempre usar la temporada actual - sin selector
+  const currentYear = getCurrentF1Season();
 
-  useEffect(() => {
-    // Mantener la lógica de años disponibles para futuras funcionalidades
-    setAvailableYears(getAvailableYears());
-  }, []);
-
-  const value = {
-    selectedYear,
-    availableYears,
-    // Mantener isCurrentSeason para compatibilidad (siempre será true ahora)
+  const value = useMemo(() => ({
+    selectedYear: currentYear,
     isCurrentSeason: true
-  };
+  }), [currentYear]);
 
   return (
     <YearContext.Provider value={value}>

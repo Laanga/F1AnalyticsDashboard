@@ -58,6 +58,31 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
     }
   }, [isOpen, meeting?.meeting_key]);
 
+  // Bloquear scroll del body cuando el modal esté abierto
+  useEffect(() => {
+    if (isOpen) {
+      // Guardar el scroll actual
+      const scrollY = window.scrollY;
+      
+      // Bloquear scroll
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      
+      // Cleanup: restaurar scroll cuando el modal se cierre
+      return () => {
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        
+        // Restaurar posición de scroll
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [isOpen]);
+
   const getSessionIcon = (type) => {
     switch (type) {
       case 'practice':

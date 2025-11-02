@@ -87,7 +87,10 @@ export const requestWithRetry = async (url, config = {}, maxRetries = MAX_RETRIE
       // Aplicar rate limiting
       await applyRateLimit();
       
-      const response = await axios(config);
+      const response = await axios({
+        url,
+        ...config
+      });
       return response;
       
     } catch (error) {

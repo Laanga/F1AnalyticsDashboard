@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Users, Flag, BarChart3, Zap } from 'lucide-react';
+import { Trophy, Users, Flag, BarChart3, Zap, Timer, Gauge, Database } from 'lucide-react';
 import { getDriverStandingsFromErgast, getConstructorStandingsFromErgast, getCurrentYear, getStatistics, getChampionshipStandings } from '../services/openf1Service';
 import { getChartColor, assignColorsToData, DRIVER_COLORS, getTeamColor, getDriverTeamColor, assignTeamColorsToDrivers } from '../utils/chartColors';
 import { getDriverPhoto } from '../utils/formatUtils';
@@ -9,6 +9,10 @@ import GraficaPuntos from '../components/estadisticas/GraficaPuntos';
 import PanelEstadisticas from '../components/estadisticas/PanelEstadisticas';
 import ClasificacionConstructores from '../components/estadisticas/ClasificacionConstructores';
 import Loader from '../components/ui/Loader';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 /**
  * Página de Estadísticas - Vista general del campeonato
@@ -20,13 +24,23 @@ const Estadisticas = () => {
   const [error, setError] = useState(null);
   const { selectedYear } = useYear();
 
+  // Refs para animaciones GSAP
+  const headerRef = useRef(null);
+  const graficasRef = useRef(null);
+  const clasificacionRef = useRef(null);
+  const constructoresRef = useRef(null);
+  const recordsRef = useRef(null);
+
   useEffect(() => {
+    const controller = new AbortController();
+    const { signal } = controller;
+
     const cargarEstadisticas = async () => {
       try {
         setLoading(true);
         const [estadisticas, equiposData] = await Promise.all([
-          getStatistics(),
-          getChampionshipStandings('constructors')
+          getStatistics({ signal }),
+          getChampionshipStandings({ signal })
         ]);
         
         setStats(estadisticas);
@@ -40,7 +54,124 @@ const Estadisticas = () => {
     };
 
     cargarEstadisticas();
-  }, [selectedYear]);
+    
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
+  // Animaciones GSAP
+  useEffect(() => {
+    if (!loading && headerRef.current) {
+      // Animación del header
+      gsap.fromTo(
+        headerRef.current,
+        { opacity: 0, y: -50 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 1,
+          ease: 'power3.out',
+        }
+      );
+
+      // Animación de las gráficas
+      if (graficasRef.current) {
+        gsap.fromTo(
+          graficasRef.current.children,
+          { opacity: 0, x: -100, rotateY: -20 },
+          {
+            opacity: 1,
+            x: 0,
+            rotateY: 0,
+            duration: 1,
+            stagger: 0.2,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: graficasRef.current,
+              start: 'top 80%',
+              toggleActions: 'play none none reverse',
+            }
+          }
+        );
+      }
+
+      // Animación de la clasificación de pilotos
+      if (clasificacionRef.current) {
+        gsap.fromTo(
+          clasificacionRef.current,
+          { opacity: 0, scale: 0.8 },
+          {
+            opacity: 1,
+            scale: 1,
+            duration: 0.8,
+            ease: 'back.out(1.4)',
+            scrollTrigger: {
+              trigger: clasificacionRef.current,
+              start: 'top 80%',
+            }
+          }
+        );
+
+        // Animación de los items de clasificación
+        const items = clasificacionRef.current.querySelectorAll('.clasificacion-item');
+        gsap.fromTo(
+          items,
+          { opacity: 0, x: -50 },
+          {
+            opacity: 1,
+            x: 0,
+            duration: 0.6,
+            stagger: 0.05,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: clasificacionRef.current,
+              start: 'top 70%',
+            }
+          }
+        );
+      }
+
+      // Animación de constructores
+      if (constructoresRef.current) {
+        gsap.fromTo(
+          constructoresRef.current,
+          { opacity: 0, y: 50 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: constructoresRef.current,
+              start: 'top 80%',
+            }
+          }
+        );
+      }
+
+      // Animación de récords con efecto de explosión
+      if (recordsRef.current) {
+        const recordCards = recordsRef.current.children;
+        gsap.fromTo(
+          recordCards,
+          { opacity: 0, scale: 0, rotation: -180 },
+          {
+            opacity: 1,
+            scale: 1,
+            rotation: 0,
+            duration: 0.8,
+            stagger: 0.15,
+            ease: 'back.out(1.7)',
+            scrollTrigger: {
+              trigger: recordsRef.current,
+              start: 'top 80%',
+            }
+          }
+        );
+      }
+    }
+  }, [loading, stats]);
 
   if (loading) {
     return (
@@ -188,293 +319,381 @@ const Estadisticas = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-10"
-      >
-        <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
-          Estadísticas
-          <span className="text-f1-red font-bold ml-3">Temporada {selectedYear}</span>
-        </h1>
-        <p className="text-white/60 text-lg">
-          Análisis completo de la temporada {selectedYear}
-        </p>
-      </motion.div>
-
-
-
-
+      <div ref={headerRef}>
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-10"
+        >
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
+            Estadísticas
+            <span className="text-f1-red font-bold ml-3">Temporada {selectedYear}</span>
+          </h1>
+          <p className="text-white/60 text-lg">
+            Visualización completa de la temporada {selectedYear}
+          </p>
+        </motion.div>
+      </div>
 
       {/* Gráficas secundarias */}
-      <div className="grid grid-cols-1 gap-6 mb-10">
+      <div ref={graficasRef} className="grid grid-cols-1 gap-6 mb-10">
         {/* Top pilotos */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5 }}
-        >
+        <div>
           <GraficaPuntos
             datos={topPilotos}
             tipo="barra"
             titulo="Top 20 Pilotos - Puntos del Campeonato"
           />
-        </motion.div>
+        </div>
 
         {/* Comparativa de equipos */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.6 }}
-        >
+        <div>
           <GraficaPuntos
             datos={datosEquipos}
             tipo="barra"
             titulo={`Comparativa de Equipos - Temporada ${selectedYear}`}
           />
-        </motion.div>
+        </div>
       </div>
 
       {/* Clasificación de Pilotos */}
-      <motion.div 
-        className="glass glass-hover rounded-3xl p-8 shadow-glass mb-10"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4, duration: 0.6 }}
-      >
-        <div className="flex items-center space-x-3 mb-8">
-          <motion.div
-            whileHover={{ scale: 1.1, rotate: 5 }}
-            transition={{ type: "spring", stiffness: 400, damping: 10 }}
-          >
-            <Trophy className="w-8 h-8 text-f1-red" />
-          </motion.div>
-          <h2 className="text-3xl font-bold text-white text-glow">Clasificación de Pilotos</h2>
-          <div className="flex items-center gap-2 ml-auto">
-            <div className={`w-2 h-2 rounded-full ${stats.dataSource === 'real' ? 'bg-green-400' : 'bg-yellow-400'}`}></div>
-            <span className="text-xs text-gray-400">
-              {stats.dataSource === 'real' ? 'Datos Reales' : 'Datos Base'}
-            </span>
+      <div ref={clasificacionRef}>
+        <motion.div 
+          className="glass glass-hover rounded-3xl p-8 shadow-glass mb-10"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.6 }}
+        >
+          <div className="flex items-center space-x-3 mb-8">
+            <motion.div
+              whileHover={{ scale: 1.1, rotate: 5 }}
+              transition={{ type: "spring", stiffness: 400, damping: 10 }}
+            >
+              <Trophy className="w-8 h-8 text-f1-red" />
+            </motion.div>
+            <h2 className="text-3xl font-bold text-white text-glow">Clasificación de Pilotos</h2>
+            <div className="flex items-center gap-2 ml-auto">
+              <div className={`w-2 h-2 rounded-full ${stats.dataSource === 'real' ? 'bg-green-400' : 'bg-yellow-400'}`}></div>
+              <span className="text-xs text-gray-400">
+                {stats.dataSource === 'real' ? 'Datos Reales' : 'Datos Base'}
+              </span>
+            </div>
           </div>
-        </div>
-        
-        <div className="space-y-4">
-          {stats.topDrivers?.length > 0 ? (
-            stats.topDrivers.slice(0, 20).map((driver, index) => (
-              <motion.div
-                key={driver.driver_number || index}
-                className={`
-                  glass glass-hover rounded-2xl p-6 border transition-all duration-300
-                  ${index < 3 
-                    ? `border-yellow-400/30 bg-gradient-to-r ${
-                        index === 0 ? 'from-yellow-400/20 to-yellow-600/10' :
-                        index === 1 ? 'from-gray-300/20 to-gray-500/10' :
-                        'from-amber-600/20 to-amber-800/10'
-                      }` 
-                    : 'border-white/10 hover:border-f1-red/30'
-                  }
-                `}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 * index, duration: 0.5 }}
-                whileHover={{ 
-                  scale: 1.02, 
-                  y: -2,
-                  boxShadow: "0 10px 30px rgba(225, 6, 0, 0.2)"
-                }}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-6">
-                    {/* Posición */}
-                    <motion.div 
-                      className={`
-                        relative w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg overflow-hidden
-                        ${index === 0 
-                          ? 'bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 text-black border border-yellow-300/50' :
-                          index === 1 
-                          ? 'bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 text-black border border-gray-200/50' :
-                          index === 2 
-                          ? 'bg-gradient-to-br from-amber-600 via-amber-700 to-amber-800 text-white border border-amber-500/50' :
-                          'bg-gradient-to-br from-slate-600 via-slate-700 to-slate-800 text-white border border-slate-500/50'
-                        }
-                        backdrop-blur-sm shadow-2xl
-                      `}
-                      whileHover={{ 
-                        scale: 1.15, 
-                        rotate: 3,
-                        boxShadow: index < 3 
-                          ? index === 0 ? "0 20px 40px rgba(251, 191, 36, 0.4)" :
-                            index === 1 ? "0 20px 40px rgba(156, 163, 175, 0.4)" :
-                            "0 20px 40px rgba(217, 119, 6, 0.4)"
-                          : "0 20px 40px rgba(71, 85, 105, 0.4)"
-                      }}
-                      whileTap={{ scale: 0.95 }}
-                      transition={{ 
-                        type: "spring", 
-                        stiffness: 400, 
-                        damping: 10,
-                        duration: 0.3
-                      }}
-                    >
-                      {/* Efecto shimmer para posiciones del podio */}
-                      {index < 3 && (
+          
+          <div className="space-y-4">
+            {stats.topDrivers?.length > 0 ? (
+              stats.topDrivers.slice(0, 20).map((driver, index) => (
+                <motion.div
+                  key={driver.driver_number || index}
+                  className={`
+                    clasificacion-item glass glass-hover rounded-2xl p-6 border transition-all duration-300
+                    ${index < 3 
+                      ? `border-yellow-400/30 bg-gradient-to-r ${
+                          index === 0 ? 'from-yellow-400/20 to-yellow-600/10' :
+                          index === 1 ? 'from-gray-300/20 to-gray-500/10' :
+                          'from-amber-600/20 to-amber-800/10'
+                        }` 
+                      : 'border-white/10 hover:border-f1-red/30'
+                    }
+                  `}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 * index, duration: 0.5 }}
+                  whileHover={{ 
+                    scale: 1.02, 
+                    y: -2,
+                    boxShadow: "0 10px 30px rgba(225, 6, 0, 0.2)"
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-6">
+                      {/* Posición */}
+                      <motion.div 
+                        className={`
+                          relative w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg overflow-hidden
+                          ${index === 0 
+                            ? 'bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 text-black border border-yellow-300/50' :
+                            index === 1 
+                            ? 'bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500 text-black border border-gray-200/50' :
+                            index === 2 
+                            ? 'bg-gradient-to-br from-amber-600 via-amber-700 to-amber-800 text-white border border-amber-500/50' :
+                            'bg-gradient-to-br from-slate-600 via-slate-700 to-slate-800 text-white border border-slate-500/50'
+                          }
+                          backdrop-blur-sm shadow-2xl
+                        `}
+                        whileHover={{ 
+                          scale: 1.15, 
+                          rotate: 3,
+                          boxShadow: index < 3 
+                            ? index === 0 ? "0 20px 40px rgba(251, 191, 36, 0.4)" :
+                              index === 1 ? "0 20px 40px rgba(156, 163, 175, 0.4)" :
+                              "0 20px 40px rgba(217, 119, 6, 0.4)"
+                            : "0 20px 40px rgba(71, 85, 105, 0.4)"
+                        }}
+                        whileTap={{ scale: 0.95 }}
+                        transition={{ 
+                          type: "spring", 
+                          stiffness: 400, 
+                          damping: 10,
+                          duration: 0.3
+                        }}
+                      >
+                        {/* Efecto shimmer para posiciones del podio */}
+                        {index < 3 && (
+                          <motion.div
+                            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                            initial={{ x: '-100%' }}
+                            animate={{ x: '100%' }}
+                            transition={{
+                              repeat: Infinity,
+                              duration: 2,
+                              ease: "easeInOut"
+                            }}
+                            style={{ clipPath: 'inset(0 0 0 0 round 16px)' }}
+                          />
+                        )}
+                        
+                        {/* Número de posición */}
+                        <span className="relative z-10 font-extrabold tracking-tight">
+                          {driver.position || index + 1}
+                        </span>
+                      </motion.div>
+
+                      {/* Foto del piloto */}
+                      <motion.div 
+                        className="relative"
+                        whileHover={{ scale: 1.1, rotate: 3 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                      >
+                        <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 bg-gradient-to-br from-slate-800 to-slate-900">
+                          <img
+                            src={getDriverPhoto(driver.driver) || '/drivers/default.png'}
+                            alt={`${driver.driver?.givenName} ${driver.driver?.familyName}`}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.src = '/drivers/default.png';
+                            }}
+                          />
+                        </div>
+                        {/* Efecto de brillo */}
                         <motion.div
-                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                          initial={{ x: '-100%' }}
-                          animate={{ x: '100%' }}
-                          transition={{
-                            repeat: Infinity,
-                            duration: 2,
-                            ease: "easeInOut"
-                          }}
-                          style={{ clipPath: 'inset(0 0 0 0 round 16px)' }}
+                          className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-0"
+                          whileHover={{ opacity: 1 }}
+                          transition={{ duration: 0.3 }}
                         />
-                      )}
-                      
-                      {/* Número de posición */}
-                      <span className="relative z-10 font-extrabold tracking-tight">
-                        {driver.position || index + 1}
-                      </span>
-                    </motion.div>
+                      </motion.div>
 
-                    {/* Foto del piloto */}
-                    <motion.div 
-                      className="relative"
-                      whileHover={{ scale: 1.1, rotate: 3 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                    >
-                      <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 bg-gradient-to-br from-slate-800 to-slate-900">
-                        <img
-                          src={getDriverPhoto(driver.driver) || '/drivers/default.png'}
-                          alt={`${driver.driver?.givenName} ${driver.driver?.familyName}`}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.target.src = '/drivers/default.png';
-                          }}
-                        />
+                      {/* Información del piloto */}
+                      <div className="flex-1">
+                        <h3 className="text-white font-bold text-xl mb-1">
+                          {driver.driver?.givenName} {driver.driver?.familyName}
+                        </h3>
+                        <p className="text-white/60 text-sm font-medium">
+                          {driver.constructor?.name}
+                        </p>
                       </div>
-                      {/* Efecto de brillo */}
-                      <motion.div
-                        className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-0"
-                        whileHover={{ opacity: 1 }}
-                        transition={{ duration: 0.3 }}
-                      />
-                    </motion.div>
+                    </div>
 
-                    {/* Información del piloto */}
-                    <div className="flex-1">
-                      <h3 className="text-white font-bold text-xl mb-1">
-                        {driver.driver?.givenName} {driver.driver?.familyName}
-                      </h3>
-                      <p className="text-white/60 text-sm font-medium">
-                        {driver.constructor?.name}
-                      </p>
+                    {/* Estadísticas */}
+                    <div className="flex items-center space-x-8">
+                      <motion.div 
+                        className="text-center"
+                        whileHover={{ scale: 1.05 }}
+                      >
+                        <p className="text-2xl font-bold text-white">{driver.points || 0}</p>
+                        <p className="text-white/60 text-sm">Puntos</p>
+                      </motion.div>
+                      
+                      <motion.div 
+                        className="text-center"
+                        whileHover={{ scale: 1.05 }}
+                      >
+                        <p className="text-2xl font-bold text-yellow-400">{driver.wins || 0}</p>
+                        <p className="text-white/60 text-sm">Victorias</p>
+                      </motion.div>
                     </div>
                   </div>
-
-                  {/* Estadísticas */}
-                  <div className="flex items-center space-x-8">
-                    <motion.div 
-                      className="text-center"
-                      whileHover={{ scale: 1.05 }}
-                    >
-                      <p className="text-2xl font-bold text-white">{driver.points || 0}</p>
-                      <p className="text-white/60 text-sm">Puntos</p>
-                    </motion.div>
-                    
-                    <motion.div 
-                      className="text-center"
-                      whileHover={{ scale: 1.05 }}
-                    >
-                      <p className="text-2xl font-bold text-yellow-400">{driver.wins || 0}</p>
-                      <p className="text-white/60 text-sm">Victorias</p>
-                    </motion.div>
-                  </div>
-                </div>
-              </motion.div>
-            ))
-          ) : (
-            <div className="text-center py-4">
-              <p className="text-gray-400">No hay datos de clasificación disponibles</p>
-            </div>
-          )}
-        </div>
-      </motion.div>
-
-
+                </motion.div>
+              ))
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-gray-400">No hay datos de clasificación disponibles</p>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      </div>
 
       {/* Clasificación de Constructores */}
-      <ClasificacionConstructores />
+      <div ref={constructoresRef}>
+        <ClasificacionConstructores />
+      </div>
 
       {/* Estadísticas adicionales */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.9 }}
-        className="grid grid-cols-1 md:grid-cols-2 gap-6"
-      >
+      <div ref={recordsRef} className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10">
         {/* Récords */}
-        <div className="glass rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-white mb-4 flex items-center space-x-2">
+        <motion.div 
+          className="glass rounded-2xl p-6 relative overflow-hidden"
+          whileHover={{ scale: 1.02 }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-f1-red/10 to-transparent pointer-events-none" />
+          
+          <h3 className="text-xl font-bold text-white mb-4 flex items-center space-x-2 relative z-10">
             <Trophy className="w-5 h-5 text-f1-red" />
             <span>Récords de la Temporada</span>
           </h3>
           
-          <div className="space-y-3">
-            <div className="glass-dark rounded-xl p-4">
-              <p className="text-white/60 text-sm mb-1">Vuelta más rápida</p>
-              <p className="text-white font-bold text-lg">1:18.567</p>
-              <p className="text-white/50 text-xs mt-1">Monza - Italia</p>
-            </div>
+          <div className="space-y-3 relative z-10">
+            <motion.div 
+              className="glass-dark rounded-xl p-4 relative overflow-hidden group"
+              whileHover={{ scale: 1.05, x: 5 }}
+              transition={{ type: "spring", stiffness: 400 }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-f1-red/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="flex items-center space-x-3 relative z-10">
+                <Timer className="w-5 h-5 text-f1-red" />
+                <div className="flex-1">
+                  <p className="text-white/60 text-sm mb-1">Vuelta más rápida</p>
+                  <p className="text-white font-bold text-lg">1:18.567</p>
+                  <p className="text-white/50 text-xs mt-1">Monza - Italia</p>
+                </div>
+              </div>
+            </motion.div>
             
-            <div className="glass-dark rounded-xl p-4">
-              <p className="text-white/60 text-sm mb-1">Mayor diferencia</p>
-              <p className="text-white font-bold text-lg">45.2s</p>
-              <p className="text-white/50 text-xs mt-1">GP de Mónaco</p>
-            </div>
-          </div>
-        </div>
+            <motion.div 
+              className="glass-dark rounded-xl p-4 relative overflow-hidden group"
+              whileHover={{ scale: 1.05, x: 5 }}
+              transition={{ type: "spring", stiffness: 400 }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="flex items-center space-x-3 relative z-10">
+                <Gauge className="w-5 h-5 text-amber-400" />
+                <div className="flex-1">
+                  <p className="text-white/60 text-sm mb-1">Mayor diferencia</p>
+                  <p className="text-white font-bold text-lg">45.2s</p>
+                  <p className="text-white/50 text-xs mt-1">GP de Mónaco</p>
+                </div>
+              </div>
+            </motion.div>
 
-        {/* Información del sistema */}
-        <div className="glass rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-white mb-4 flex items-center space-x-2">
-            <BarChart3 className="w-5 h-5 text-f1-red" />
-            <span>Fuente de Datos</span>
+            <motion.div 
+              className="glass-dark rounded-xl p-4 relative overflow-hidden group"
+              whileHover={{ scale: 1.05, x: 5 }}
+              transition={{ type: "spring", stiffness: 400 }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="flex items-center space-x-3 relative z-10">
+                <Zap className="w-5 h-5 text-blue-400" />
+                <div className="flex-1">
+                  <p className="text-white/60 text-sm mb-1">Pit Stop más rápido</p>
+                  <p className="text-white font-bold text-lg">1.82s</p>
+                  <p className="text-white/50 text-xs mt-1">Red Bull Racing</p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </motion.div>
+
+        {/* Fuentes de Datos */}
+        <motion.div 
+          className="glass rounded-2xl p-6 relative overflow-hidden"
+          whileHover={{ scale: 1.02 }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent pointer-events-none" />
+          
+          <h3 className="text-xl font-bold text-white mb-4 flex items-center space-x-2 relative z-10">
+            <Database className="w-5 h-5 text-blue-400" />
+            <span>Fuentes de Datos</span>
           </h3>
           
-          <div className="space-y-3">
-            <div className="glass-dark rounded-xl p-4">
-              <p className="text-white/60 text-sm mb-2">API Oficial</p>
-              <a
-                href="https://openf1.org"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-f1-red hover:text-f1-red/80 font-semibold transition-colors"
-              >
-                OpenF1.org
-              </a>
-            </div>
+          <div className="space-y-3 relative z-10">
+            <motion.div 
+              className="glass-dark rounded-xl p-4 relative overflow-hidden group"
+              whileHover={{ scale: 1.05, x: 5 }}
+              transition={{ type: "spring", stiffness: 400 }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-f1-red/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative z-10">
+                <p className="text-white/60 text-sm mb-2">API Principal</p>
+                <a
+                  href="https://openf1.org"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-f1-red hover:text-f1-red/80 font-semibold transition-colors text-lg flex items-center space-x-2"
+                >
+                  <span>OpenF1</span>
+                  <motion.span
+                    animate={{ x: [0, 5, 0] }}
+                    transition={{ repeat: Infinity, duration: 1.5 }}
+                  >
+                    →
+                  </motion.span>
+                </a>
+                <p className="text-white/50 text-xs mt-2">Datos de sesiones y telemetría en tiempo real</p>
+              </div>
+            </motion.div>
             
-            <div className="glass-dark rounded-xl p-4">
+            <motion.div 
+              className="glass-dark rounded-xl p-4 relative overflow-hidden group"
+              whileHover={{ scale: 1.05, x: 5 }}
+              transition={{ type: "spring", stiffness: 400 }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative z-10">
+                <p className="text-white/60 text-sm mb-2">API Histórica</p>
+                <a
+                  href="http://ergast.com/mrd/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 hover:text-blue-300 font-semibold transition-colors text-lg flex items-center space-x-2"
+                >
+                  <span>Ergast F1 API</span>
+                  <motion.span
+                    animate={{ x: [0, 5, 0] }}
+                    transition={{ repeat: Infinity, duration: 1.5, delay: 0.3 }}
+                  >
+                    →
+                  </motion.span>
+                </a>
+                <p className="text-white/50 text-xs mt-2">Clasificaciones y resultados históricos</p>
+              </div>
+            </motion.div>
+
+            <motion.div 
+              className="glass-dark rounded-xl p-4"
+              whileHover={{ scale: 1.05 }}
+            >
               <p className="text-white/60 text-sm mb-2">Última actualización</p>
               <p className="text-white font-semibold">
                 {new Date().toLocaleString('es-ES')}
               </p>
-            </div>
+            </motion.div>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
 
-      {/* Nota final */}
+      {/* Nota final con animación */}
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.1 }}
-        className="mt-10 glass-dark rounded-2xl p-6 text-center"
+        className="mt-10 glass-dark rounded-2xl p-6 text-center relative overflow-hidden"
       >
-        <p className="text-white/60 text-sm">
+        <motion.div
+          animate={{ 
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.5, 0.3]
+          }}
+          transition={{ 
+            duration: 3,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute inset-0 bg-gradient-to-r from-f1-red/20 via-transparent to-f1-red/20 blur-xl"
+        />
+        <p className="text-white/60 text-sm relative z-10">
           <strong className="text-white">Nota:</strong> Los datos de puntos y clasificaciones 
-          son obtenidos en tiempo real de la API oficial de Ergast F1.
+          son obtenidos en tiempo real de OpenF1 y Ergast F1 API.
         </p>
       </motion.div>
     </div>
@@ -482,4 +701,3 @@ const Estadisticas = () => {
 };
 
 export default Estadisticas;
-

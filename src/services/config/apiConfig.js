@@ -1,11 +1,11 @@
-// Configuración de APIs
+// Configuración de APIs usando variables de entorno
 export const API_CONFIG = {
   OPENF1: {
-    BASE_URL: 'https://api.openf1.org/v1',
-    CACHE_DURATION: 5 * 60 * 1000, // 5 minutos
+    BASE_URL: import.meta.env.VITE_OPENF1_API_URL || 'https://api.openf1.org/v1',
+    CACHE_DURATION: Number(import.meta.env.VITE_CACHE_DURATION) || 5 * 60 * 1000, // 5 minutos por defecto
   },
   JOLPICA: {
-    BASE_URL: 'https://api.jolpi.ca/ergast/f1',
+    BASE_URL: import.meta.env.VITE_ERGAST_API_URL || 'https://api.jolpi.ca/ergast/f1',
   }
 };
 
@@ -24,7 +24,6 @@ export const RACES_PER_SEASON = {
   2016: 21,
   2015: 19,
   2014: 19,
-  // Añadir más años según sea necesario
 };
 
 // Sistema de puntos F1
@@ -52,36 +51,44 @@ export const F1_SPRINT_POINTS = {
   8: 1     // 8vo lugar
 };
 
-// Obtener el año actual dinámicamente
+/**
+ * Obtiene el año actual
+ */
 export const getCurrentYear = () => {
   return new Date().getFullYear();
 };
 
-// Obtener la temporada F1 activa (considera que la temporada puede empezar en marzo)
+/**
+ * Obtiene la temporada F1 activa
+ * La temporada F1 generalmente comienza en marzo y termina en diciembre
+ */
 export const getCurrentF1Season = () => {
-  // Estamos en octubre de 2025, usar 2025
-  return 2025;
-};
-
-// Obtener años disponibles para el selector
-export const getAvailableYears = () => {
-  const currentYear = getCurrentYear();
-  const years = [];
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1; // getMonth() retorna 0-11
   
-  // Desde 2018 (cuando empezó a haber más datos) hasta el año actual
-  for (let year = 2018; year <= currentYear; year++) {
-    years.push(year);
+  // Si estamos en enero o febrero, es el final de la temporada anterior
+  // pero para propósitos de la app, ya mostramos la siguiente temporada
+  // ya que no hay carreras activas
+  if (currentMonth <= 2) {
+    // Opcional: podrías retornar currentYear - 1 si quieres mostrar
+    // los resultados finales de la temporada anterior
+    return currentYear;
   }
   
-  return years.reverse(); // Más recientes primero
+  return currentYear;
 };
 
-// Obtener el total de carreras de una temporada
+/**
+ * Obtiene el total de carreras de una temporada
+ */
 export const getTotalRacesForYear = (year) => {
   return RACES_PER_SEASON[year] || 24; // Por defecto 24 carreras
 };
 
-// Obtener sistema de puntos según el tipo de sesión
+/**
+ * Obtiene el sistema de puntos según el tipo de sesión
+ */
 export const getPointsSystem = (sessionName) => {
   if (sessionName && sessionName.toLowerCase().includes('sprint')) {
     return F1_SPRINT_POINTS;

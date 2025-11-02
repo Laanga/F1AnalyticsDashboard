@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getDrivers, getDriverStandings } from '../services/openf1Service';
 import CardPiloto from '../components/pilotos/CardPiloto';
@@ -9,56 +9,42 @@ import { getDriverFlag } from '../utils/flagUtils.jsx';
 import { getTeamLogo, getDriverPhoto } from '../utils/formatUtils';
 import { useYear } from '../contexts/YearContext';
 import { StickyCard002 } from "@/components/ui/skiper17";
+import { useAsyncDataParallel } from '../hooks/useAsyncData';
 
 const Pilotos = () => {
-  const [pilotos, setPilotos] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [pilotoSeleccionado, setPilotoSeleccionado] = useState(null);
   const [modalAbierto, setModalAbierto] = useState(false);
   const { selectedYear } = useYear();
 
-  useEffect(() => {
-    const cargarPilotos = async () => {
-      try {
-        setLoading(true);
-        const [driversData, standings] = await Promise.all([
-          getDrivers(selectedYear),
-          getDriverStandings()
-        ]);
+  // Usar el hook personalizado para manejar las llamadas con cleanup
+  const { data, loading, error } = useAsyncDataParallel([
+    (signal) => getDrivers({ signal }),
+    (signal) => getDriverStandings({ signal })
+  ], []);
 
-        // Mapear puntos desde standings (Ergast) a los pilotos
-        const pilotosConPuntos = driversData.map((p) => {
-          const dn = (p.driver_number ?? '').toString();
-          const code = (p.name_acronym ?? '').toLowerCase();
-          const full = (p.full_name ?? '').trim().toLowerCase();
+  const [driversData = [], standings = []] = data;
 
-          const sr =
-            standings.find((s) => (s.driver?.permanentNumber ?? '').toString() === dn) ||
-            standings.find((s) => (s.driver?.code ?? '').toLowerCase() === code) ||
-            standings.find(
-              (s) => `${(s.driver?.givenName ?? '').trim().toLowerCase()} ${(s.driver?.familyName ?? '').trim().toLowerCase()}` === full
-            );
+  // Mapear puntos desde standings a los pilotos
+  const pilotos = driversData.map((p) => {
+    const dn = (p.driver_number ?? '').toString();
+    const code = (p.name_acronym ?? '').toLowerCase();
+    const full = (p.full_name ?? '').trim().toLowerCase();
 
-          return {
-            ...p,
-            points: sr?.points ?? 0,
-            position: sr?.position ?? null,
-            wins: sr?.wins ?? 0,
-            // Normalizar team_name si viene del standing
-            team_name: p.team_name || sr?.constructor?.name || p.team_name,
-          };
-        });
+    const sr =
+      standings.find((s) => (s.driver?.permanentNumber ?? '').toString() === dn) ||
+      standings.find((s) => (s.driver?.code ?? '').toLowerCase() === code) ||
+      standings.find(
+        (s) => `${(s.driver?.givenName ?? '').trim().toLowerCase()} ${(s.driver?.familyName ?? '').trim().toLowerCase()}` === full
+      );
 
-        setPilotos(pilotosConPuntos);
-      } catch (error) {
-        console.error('Error al cargar pilotos:', error);
-      } finally {
-        setLoading(false);
-      }
+    return {
+      ...p,
+      points: sr?.points ?? 0,
+      position: sr?.position ?? null,
+      wins: sr?.wins ?? 0,
+      team_name: p.team_name || sr?.constructor?.name || p.team_name,
     };
-
-    cargarPilotos();
-  }, [selectedYear]);
+  });
 
   const handleClickPiloto = (piloto) => {
     setPilotoSeleccionado(piloto);
@@ -74,6 +60,16 @@ const Pilotos = () => {
     return (
       <div className="container mx-auto px-4 py-8">
         <Loader mensaje="Cargando pilotos..." />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="glass rounded-2xl p-8 text-center">
+          <p className="text-white/70">Error al cargar pilotos: {error}</p>
+        </div>
       </div>
     );
   }
@@ -455,7 +451,6 @@ const Pilotos = () => {
                           className="w-12 h-12 object-contain"
                           whileHover={{ scale: 1.1 }}
                           onError={(e) => {
-                            // Si falla la imagen, mostrar un cuadro de color como fallback
                             e.target.style.display = 'none';
                             e.target.parentElement.style.background = `linear-gradient(135deg, #${pilotoSeleccionado.team_colour}, rgba(${parseInt(pilotoSeleccionado.team_colour.slice(0,2), 16)}, ${parseInt(pilotoSeleccionado.team_colour.slice(2,4), 16)}, ${parseInt(pilotoSeleccionado.team_colour.slice(4,6), 16)}, 0.7))`;
                           }}
@@ -479,7 +474,6 @@ const Pilotos = () => {
                       </div>
                     </motion.div>
                     
-                    {/* Efecto de brillo animado */}
                     <motion.div
                       className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"
                       initial={{ x: '-100%' }}

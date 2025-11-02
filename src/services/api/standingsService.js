@@ -8,7 +8,8 @@ import { getTeamColor } from '../../utils/formatUtils.js';
  * Servicio para operaciones relacionadas con clasificaciones y standings
  */
 
-export const getDriverStandingsFromErgast = async () => {
+export const getDriverStandingsFromErgast = async (options = {}) => {
+  const { signal } = options;
   const selectedYear = getSelectedYear();
   const cacheKey = `driver_standings_ergast_${selectedYear}`;
   
@@ -18,7 +19,7 @@ export const getDriverStandingsFromErgast = async () => {
   }
 
   try {
-    const response = await axios.get(`${API_CONFIG.JOLPICA.BASE_URL}/${selectedYear}/driverstandings.json`);
+    const response = await axios.get(`${API_CONFIG.JOLPICA.BASE_URL}/${selectedYear}/driverstandings.json`, { signal });
     
     if (response.data?.MRData?.StandingsTable?.StandingsLists?.[0]?.DriverStandings) {
       const standings = response.data.MRData.StandingsTable.StandingsLists[0].DriverStandings;
@@ -46,13 +47,18 @@ export const getDriverStandingsFromErgast = async () => {
       return processedStandings;
     }
   } catch (error) {
+    // Ignorar errores de cancelación
+    if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+      return [];
+    }
     console.error('❌ Error al obtener clasificaciones desde Ergast:', error.message);
   }
   
   return [];
 };
 
-export const getConstructorStandingsFromErgast = async () => {
+export const getConstructorStandingsFromErgast = async (options = {}) => {
+  const { signal } = options;
   const selectedYear = getSelectedYear();
   const cacheKey = `constructor_standings_ergast_${selectedYear}`;
   
@@ -62,7 +68,7 @@ export const getConstructorStandingsFromErgast = async () => {
   }
 
   try {
-    const response = await axios.get(`${API_CONFIG.JOLPICA.BASE_URL}/${selectedYear}/constructorstandings.json`);
+    const response = await axios.get(`${API_CONFIG.JOLPICA.BASE_URL}/${selectedYear}/constructorstandings.json`, { signal });
     
     if (response.data?.MRData?.StandingsTable?.StandingsLists?.[0]?.ConstructorStandings) {
       const standings = response.data.MRData.StandingsTable.StandingsLists[0].ConstructorStandings;
@@ -86,16 +92,21 @@ export const getConstructorStandingsFromErgast = async () => {
       return processedStandings;
     }
   } catch (error) {
+    // Ignorar errores de cancelación
+    if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+      return [];
+    }
     console.error('❌ Error al obtener clasificaciones de constructores desde Ergast:', error.message);
   }
   
   return [];
 };
 
-export const getDriverStandings = async () => {
+export const getDriverStandings = async (options = {}) => {
+  const { signal } = options;
   try {
     // Intentar obtener datos reales primero
-    const realStandings = await getDriverStandingsFromErgast();
+    const realStandings = await getDriverStandingsFromErgast({ signal });
     if (realStandings.length > 0) {
       return realStandings;
     }
@@ -108,10 +119,11 @@ export const getDriverStandings = async () => {
   }
 };
 
-export const getConstructorStandings = async () => {
+export const getConstructorStandings = async (options = {}) => {
+  const { signal } = options;
   try {
     // Intentar obtener datos reales primero
-    const realStandings = await getConstructorStandingsFromErgast();
+    const realStandings = await getConstructorStandingsFromErgast({ signal });
     if (realStandings.length > 0) {
       return realStandings;
     }
@@ -124,13 +136,13 @@ export const getConstructorStandings = async () => {
   }
 };
 
-export const getChampionshipStandings = async (year = null) => {
+export const getChampionshipStandings = async (options = {}) => {
+  const { signal } = options;
   try {
-    // TEMPORAL: Forzar año 2024 para obtener datos
-    const selectedYear = 2024;
+    const selectedYear = getSelectedYear();
     const cacheKey = `championship_standings_${selectedYear}`;
     
-    // TEMPORAL: Limpiar cache para forzar actualización
+    // Limpiar cache para forzar actualización
     clearCache();
     
     // Verificar cache primero
@@ -141,8 +153,8 @@ export const getChampionshipStandings = async (year = null) => {
     
     // Obtener datos de pilotos y constructores
     const [driverStandings, constructorStandings] = await Promise.all([
-      getDriverStandingsFromErgast(),
-      getConstructorStandingsFromErgast()
+      getDriverStandingsFromErgast({ signal }),
+      getConstructorStandingsFromErgast({ signal })
     ]);
 
 
@@ -205,27 +217,34 @@ export const getChampionshipStandings = async (year = null) => {
 };
 
 /**
- * Aplica correcciones manuales a las asignaciones de equipos
+ * Aplica correcciones manuales a las asignaciones de equipos para 2025
+ * Cambios mid-season:
+ * - Tsunoda: Promovido a Red Bull Racing desde el GP de Japón (carrera 3)
+ * - Lawson: Degradado a Racing Bulls desde el GP de Japón (carrera 3)
  * @param {Object} data - Datos de standings
  * @returns {Object} Datos corregidos
  */
 const applyTeamCorrections = (data) => {
-  // Solo aplicar correcciones específicas para Tsunoda y Lawson
+  console.log('\ud83d\udd27 Aplicando correcciones de equipos para 2025...');
+  
+  // Primero, corregir los drivers individuales
   data.drivers = data.drivers.map(driver => {
     const driverKey = driver.name_acronym?.toLowerCase();
     const fullNameKey = driver.full_name?.toLowerCase();
     
-    // Corrección específica para Tsunoda - DEBE IR A RED BULL RACING
+    // Corrección específica para Tsunoda - DEBE IR A RED BULL RACING (promovido en 2025)
     if (driverKey === 'tsu' || (fullNameKey && fullNameKey.includes('tsunoda'))) {
+      console.log('\u2705 Corrigiendo Tsunoda -> Red Bull Racing');
       return {
         ...driver,
-        team_name: 'Red Bull Racing',
-        team_colour: getTeamColor('Red Bull Racing')
+        team_name: 'Red Bull',
+        team_colour: getTeamColor('Red Bull')
       };
     }
     
-    // Corrección específica para Lawson - DEBE IR A RB F1 TEAM
+    // Corrección específica para Lawson - DEBE IR A RACING BULLS (degradado en 2025)
     if (driverKey === 'law' || (fullNameKey && fullNameKey.includes('lawson'))) {
+      console.log('\u2705 Corrigiendo Lawson -> Racing Bulls');
       return {
         ...driver,
         team_name: 'RB F1 Team',
@@ -237,23 +256,38 @@ const applyTeamCorrections = (data) => {
     return driver;
   });
 
-  // Corregir constructors - actualizar los drivers con las correcciones aplicadas
+  // Ahora reorganizar los constructores con los pilotos corregidos
   data.constructors = data.constructors.map(constructor => {
-    const updatedDrivers = constructor.drivers.map(driver => {
-      // Buscar el driver corregido en la lista de drivers por acrónimo
-      const correctedDriver = data.drivers.find(d => 
-        d.name_acronym === driver.name_acronym
-      );
-      return correctedDriver || driver;
-    });
+    let teamDrivers = [];
+    
+    // Identificar el equipo y asignar los pilotos correctos
+    const teamName = constructor.team_name.toLowerCase();
+    
+    if (teamName.includes('red bull') && !teamName.includes('rb') && !teamName.includes('racing')) {
+      // Red Bull Racing - Debe tener Verstappen y Tsunoda
+      teamDrivers = data.drivers.filter(d => {
+        const dKey = d.name_acronym?.toLowerCase();
+        return dKey === 'ver' || dKey === 'tsu';
+      });
+      console.log('\ud83d\udee0\ufe0f Red Bull Racing pilotos:', teamDrivers.map(d => d.name_acronym).join(', '));
+    } else if (teamName.includes('rb') || teamName.includes('racing bulls')) {
+      // Racing Bulls - Debe tener Lawson y Hadjar
+      teamDrivers = data.drivers.filter(d => {
+        const dKey = d.name_acronym?.toLowerCase();
+        return dKey === 'law' || dKey === 'had';
+      });
+      console.log('\ud83d\udee0\ufe0f Racing Bulls pilotos:', teamDrivers.map(d => d.name_acronym).join(', '));
+    } else {
+      // Para otros equipos, mantener sus pilotos originales
+      teamDrivers = constructor.drivers;
+    }
 
     return {
       ...constructor,
-      drivers: updatedDrivers
+      drivers: teamDrivers
     };
   });
 
-
-
+  console.log('\u2705 Correcciones aplicadas exitosamente');
   return data;
 };

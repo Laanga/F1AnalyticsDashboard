@@ -1,113 +1,69 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { getChampionshipStandings, getDrivers } from '../services/openf1Service';
 import Loader from '../components/ui/Loader';
 import { Shield, Users, TrendingUp, Trophy } from 'lucide-react';
 import { useYear } from '../contexts/YearContext';
 import { getTeamLogo, getTeamColor, getDriverPhoto } from '../utils/formatUtils';
 import { getDriverNationality } from '../utils/nationalityUtils';
+import { useAsyncDataParallel } from '../hooks/useAsyncData';
 
 const Equipos = () => {
-  const [standings, setStandings] = useState(null);
-  const [drivers, setDrivers] = useState([]);
-  const [loading, setLoading] = useState(true);
   const { selectedYear } = useYear();
 
-  useEffect(() => {
-    const cargarEquipos = async () => {
-      try {
-        setLoading(true);
-        
-        const [standingsData, driversData] = await Promise.all([
-          getChampionshipStandings(),
-          getDrivers()
-        ]);
-        
-        const driversMap = new Map();
-        const driversMapByName = new Map();
-        
-        driversData.forEach(driver => {
-          if (driver.driver_number) {
-            driversMap.set(String(driver.driver_number), driver);
-          }
-          if (driver.full_name) {
-            driversMapByName.set(driver.full_name.toLowerCase(), driver);
-          }
-          if (driver.name_acronym) {
-            driversMapByName.set(driver.name_acronym.toLowerCase(), driver);
-          }
-        });
-        
-        const equiposFormateados = standingsData.constructors.map(constructor => ({
-          nombre: constructor.team_name,
-          pilotos: constructor.drivers.map(driver => {
-            let driverWithPhoto = driversMap.get(String(driver.driver_number));
-            
-            if (!driverWithPhoto) {
-              driverWithPhoto = driversMapByName.get(driver.full_name?.toLowerCase()) ||
-                               driversMapByName.get(driver.name_acronym?.toLowerCase());
-            }
-            
-            return {
-              driver_number: driver.driver_number,
-              full_name: driver.full_name,
-              name_acronym: driver.name_acronym,
-              puntos: driver.points,
-              team_name: constructor.team_name,
-              team_colour: constructor.team_colour,
-              country_code: driverWithPhoto?.country_code || '',
-              headshot_url: driverWithPhoto?.headshot_url || null
-            };
-          }),
-          color: constructor.team_colour || '#e10600',
-          puntos: constructor.points
-        }));
-        
-        setStandings({ constructors: equiposFormateados });
-        setDrivers(driversData);
-      } catch (error) {
-        console.error('Error al cargar equipos:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Usar el hook personalizado para manejar las llamadas con cleanup
+  const { data, loading, error } = useAsyncDataParallel([
+    (signal) => getChampionshipStandings({ signal }),
+    (signal) => getDrivers({ signal })
+  ], []);
 
-    cargarEquipos();
-  }, [selectedYear]);
+  const [standingsData, driversData = []] = data;
 
-  const formatearEquipos = useCallback((driversData, standingsData) => {
-    if (!driversData || !standingsData) return [];
+  // Procesar los datos solo cuando cambien
+  const standings = useMemo(() => {
+    if (!standingsData || !driversData) return null;
 
-    const equiposMap = new Map();
-
+    const driversMap = new Map();
+    const driversMapByName = new Map();
+    
     driversData.forEach(driver => {
-      const teamName = driver.team_name;
-      if (!equiposMap.has(teamName)) {
-        equiposMap.set(teamName, {
-          nombre: teamName,
-          color: getTeamColor(teamName),
-          logo: getTeamLogo(teamName),
-          pilotos: [],
-          puntos: 0,
-          posicion: 0
-        });
+      if (driver.driver_number) {
+        driversMap.set(String(driver.driver_number), driver);
       }
-      equiposMap.get(teamName).pilotos.push(driver);
-    });
-
-    standingsData.constructors?.forEach(constructor => {
-      const teamName = constructor.nombre;
-      if (equiposMap.has(teamName)) {
-        const equipo = equiposMap.get(teamName);
-        equipo.puntos = constructor.puntos;
-        equipo.posicion = constructor.position || 0;
+      if (driver.full_name) {
+        driversMapByName.set(driver.full_name.toLowerCase(), driver);
+      }
+      if (driver.name_acronym) {
+        driversMapByName.set(driver.name_acronym.toLowerCase(), driver);
       }
     });
-
-    const equiposArray = Array.from(equiposMap.values());
-    equiposArray.sort((a, b) => a.posicion - b.posicion);
-
-    return equiposArray;
-  }, []);
+    
+    const equiposFormateados = standingsData.constructors.map(constructor => ({
+      nombre: constructor.team_name,
+      pilotos: constructor.drivers.map(driver => {
+        let driverWithPhoto = driversMap.get(String(driver.driver_number));
+        
+        if (!driverWithPhoto) {
+          driverWithPhoto = driversMapByName.get(driver.full_name?.toLowerCase()) ||
+                           driversMapByName.get(driver.name_acronym?.toLowerCase());
+        }
+        
+        return {
+          driver_number: driver.driver_number,
+          full_name: driver.full_name,
+          name_acronym: driver.name_acronym,
+          puntos: driver.points,
+          team_name: constructor.team_name,
+          team_colour: constructor.team_colour,
+          country_code: driverWithPhoto?.country_code || '',
+          headshot_url: driverWithPhoto?.headshot_url || null
+        };
+      }),
+      color: constructor.team_colour || '#e10600',
+      puntos: constructor.points
+    }));
+    
+    return { constructors: equiposFormateados };
+  }, [standingsData, driversData]);
 
   const equipos = useMemo(() => {
     return standings?.constructors || [];
@@ -117,6 +73,16 @@ const Equipos = () => {
     return (
       <div className="container mx-auto px-4 py-8">
         <Loader mensaje="Cargando equipos..." />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="glass rounded-2xl p-8 text-center">
+          <p className="text-white/70">Error al cargar equipos: {error}</p>
+        </div>
       </div>
     );
   }
@@ -309,4 +275,3 @@ const Equipos = () => {
 };
 
 export default Equipos;
-
