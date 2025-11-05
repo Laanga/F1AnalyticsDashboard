@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Flag, Trophy, Timer, TrendingUp, ChevronDown, Zap, Calendar, Users, Shield } from 'lucide-react';
+import { Flag, Trophy, Timer, TrendingUp, ChevronDown, Zap, Calendar, Users, Shield, Github } from 'lucide-react';
 import { getSeasonProgress, getDriverStandings, getDrivers } from '../services/openf1Service';
 import { useYear } from '../contexts/YearContext';
 import { getDriverPhoto } from '../utils/formatUtils';
@@ -25,6 +25,7 @@ const Inicio = () => {
   const statsRef = useRef(null);
   const driversRef = useRef(null);
   const featuresRef = useRef(null);
+  const repoUrl = 'https://github.com/Laanga/F1DataExplorer';
 
   useEffect(() => {
     const controller = new AbortController();
@@ -189,7 +190,7 @@ const Inicio = () => {
   ];
 
   return (
-    <div className="min-h-screen overflow-x-hidden">
+  <div className="min-h-screen overflow-x-hidden flex flex-col">
       {/* Hero Section */}
       <section className="min-h-screen flex items-center justify-center px-4 relative">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -623,6 +624,22 @@ const Inicio = () => {
           </motion.div>
         </div>
       </section>
+      <footer className="mt-auto px-4 py-8 border-t border-white/10 bg-black/20">
+        <div className="max-w-7xl mx-auto flex items-center justify-center">
+          <motion.a
+            href={repoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Ver repositorio en GitHub"
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            className="group inline-flex items-center gap-3 px-5 py-3 rounded-2xl glass glass-hover text-white/90 hover:text-white"
+          >
+            <Github className="w-6 h-6 text-white group-hover:text-f1-red transition-colors" />
+            <span className="font-semibold">Ver repositorio en GitHub</span>
+          </motion.a>
+        </div>
+      </footer>
     </div>
   );
 };
