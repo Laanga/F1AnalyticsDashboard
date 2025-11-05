@@ -142,3 +142,14 @@
   }
 }
 
+/* === Utilidad: ocultar scrollbar visual manteniendo scroll funcional === */
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE y Edge */
+    scrollbar-width: none;    /* Firefox */
+  }
+}
+

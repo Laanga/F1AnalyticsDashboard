@@ -6,9 +6,8 @@ import Loader from '../components/ui/Loader';
 import { X, User, Flag, Hash, Shield, Info } from 'lucide-react';
 import { getDriverNationality } from '../utils/nationalityUtils';
 import { getDriverFlag } from '../utils/flagUtils.jsx';
-import { getTeamLogo, getDriverPhoto } from '../utils/formatUtils';
+import { getTeamLogo } from '../utils/formatUtils';
 import { useYear } from '../contexts/YearContext';
-import { StickyCard002 } from "@/components/ui/skiper17";
 import { useAsyncDataParallel } from '../hooks/useAsyncData';
 
 const Pilotos = () => {
@@ -85,17 +84,7 @@ const Pilotos = () => {
     return na - nb;
   });
 
-  // Ordenar stack por puntos (descendente)
-  const stackPilotos = [...pilotos].sort((a, b) => (b.points || 0) - (a.points || 0));
-
-  const carouselImages = stackPilotos.map((p, idx) => ({
-    id: p.driver_number || idx,
-    image: getDriverPhoto(p) || p.headshot_url || '',
-    alt: p.full_name,
-    name: p.full_name,
-    teamName: p.team_name,
-    number: p.driver_number,
-  }));
+  // Sin Skiper: no necesitamos generar imágenes para el stack
 
   return (
     <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 overflow-x-hidden">
@@ -131,48 +120,46 @@ const Pilotos = () => {
         </motion.p>
       </motion.div>
 
-      {/* Stack de cartas de pilotos (GSAP estilo Skiper UI) con la grilla al final */}
+      {/* Grilla de pilotos */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.6 }}
         className="mb-6"
       >
-        <StickyCard002 cards={carouselImages}>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1, duration: 0.6, ease: "easeOut" }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"
-          >
-            {sortedPilotos.map((piloto, index) => (
-              <motion.div
-                key={piloto.driver_number || index}
-                initial={{ opacity: 0, y: 50, rotateX: -15 }}
-                animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                transition={{ 
-                  delay: 0.2 + index * 0.05,
-                  duration: 0.5,
-                  type: "spring",
-                  stiffness: 100,
-                  damping: 15
-                }}
-                whileHover={{ 
-                  y: -8, 
-                  scale: 1.03,
-                  rotateY: 2,
-                  transition: { duration: 0.3, ease: "easeOut" }
-                }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <CardPiloto
-                  piloto={piloto}
-                  onClick={() => handleClickPiloto(piloto)}
-                />
-              </motion.div>
-            ))}
-          </motion.div>
-        </StickyCard002>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1, duration: 0.6, ease: "easeOut" }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"
+        >
+          {sortedPilotos.map((piloto, index) => (
+            <motion.div
+              key={piloto.driver_number || index}
+              initial={{ opacity: 0, y: 50, rotateX: -15 }}
+              animate={{ opacity: 1, y: 0, rotateX: 0 }}
+              transition={{ 
+                delay: 0.2 + index * 0.05,
+                duration: 0.5,
+                type: "spring",
+                stiffness: 100,
+                damping: 15
+              }}
+              whileHover={{ 
+                y: -8, 
+                scale: 1.03,
+                rotateY: 2,
+                transition: { duration: 0.3, ease: "easeOut" }
+              }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <CardPiloto
+                piloto={piloto}
+                onClick={() => handleClickPiloto(piloto)}
+              />
+            </motion.div>
+          ))}
+        </motion.div>
       </motion.div>
 
       <AnimatePresence>
