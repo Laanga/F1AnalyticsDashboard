@@ -614,7 +614,7 @@ const Inicio = () => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => navigate('/pilotos')}
+                onClick={() => navigate('/estadisticas')}
                 className="px-8 py-4 rounded-2xl bg-gradient-to-r from-f1-red to-red-700 text-white font-bold text-lg shadow-2xl shadow-f1-red/30"
               >
                 Ver Clasificación

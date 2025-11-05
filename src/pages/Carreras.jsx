@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { getRaces, getMeetings } from '../services/openf1Service';
+import { getRaces, getMeetings, getCompleteMeetingResults } from '../services/openf1Service';
 import Loader from '../components/ui/Loader';
 import RaceModal from '../components/ui/RaceModal';
 import { formatearFecha, isCarreraCompletada } from '../utils/dateUtils';
@@ -19,6 +19,7 @@ const Carreras = () => {
   const [selectedRace, setSelectedRace] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { selectedYear } = useYear();
+  const prefetchedMeetingsRef = React.useRef(new Set());
 
   const openRaceModal = (carrera) => {
     setSelectedRace(carrera);
@@ -28,6 +29,20 @@ const Carreras = () => {
   const closeRaceModal = () => {
     setIsModalOpen(false);
     setSelectedRace(null);
+  };
+
+  const prefetchMeeting = async (meetingKey) => {
+    if (!meetingKey) return;
+    const setRef = prefetchedMeetingsRef.current;
+    if (setRef.has(meetingKey)) return;
+    setRef.add(meetingKey);
+    try {
+      // Prefetch silencioso: calienta la caché para el modal
+      await getCompleteMeetingResults(meetingKey);
+    } catch (e) {
+      // No mostrar errores de prefetch en UI
+      console.warn('Prefetch meeting falló:', e?.message || e);
+    }
   };
 
   useEffect(() => {
@@ -257,6 +272,7 @@ const Carreras = () => {
                       x: 5
                     }}
                     onClick={() => openRaceModal(carrera)}
+                    onMouseEnter={() => prefetchMeeting(meeting?.meeting_key || carrera.meeting_key)}
                     className="px-6 py-5 transition-all duration-300 cursor-pointer border-l-4 border-transparent hover:border-blue-400"
                   >
                     <div className="flex flex-col md:flex-row md:items-center justify-between space-y-3 md:space-y-0">
@@ -351,6 +367,7 @@ const Carreras = () => {
                       x: 5
                     }}
                     onClick={() => openRaceModal(carrera)}
+                    onMouseEnter={() => prefetchMeeting(meeting?.meeting_key || carrera.meeting_key)}
                     className="px-6 py-5 transition-all duration-300 cursor-pointer border-l-4 border-transparent hover:border-green-400"
                   >
                     <div className="flex flex-col md:flex-row md:items-center justify-between space-y-3 md:space-y-0">

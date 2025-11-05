@@ -130,7 +130,6 @@ export const requestWithRetry = async (url, config = {}, maxRetries = MAX_RETRIE
  */
 export const safeRequest = async (url, config = {}) => {
   return queueRequest(async () => {
-    await applyRateLimit();
     return requestWithRetry(url, config);
   });
 };

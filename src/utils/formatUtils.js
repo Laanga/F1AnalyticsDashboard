@@ -231,6 +231,18 @@ export const getTeamLogo = (teamName) => {
  */
 export const getDriverPhoto = (driver) => {
   if (!driver) return null;
+  // Normalizar cadenas (minúsculas y sin acentos)
+  const normalize = (s) => {
+    if (!s) return '';
+    try {
+      return String(s)
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+    } catch {
+      return String(s).toLowerCase();
+    }
+  };
   
   // Mapeo de apellidos a archivos locales
   const photoMappings = {
@@ -258,24 +270,24 @@ export const getDriverPhoto = (driver) => {
   };
 
   // Intentar múltiples formas de obtener el apellido
+  const derivedFullName = driver.full_name || `${driver.givenName || driver.first_name || ''} ${driver.familyName || driver.last_name || ''}`.trim();
   const possibleLastNames = [
     driver.last_name,
     driver.familyName,
-    driver.full_name ? driver.full_name.split(' ').slice(-1)[0] : null,
-    driver.name_acronym ? driver.name_acronym.toLowerCase() : null
+    derivedFullName ? derivedFullName.split(' ').slice(-1)[0] : null
   ].filter(Boolean);
 
   // Buscar por apellido exacto
   for (const lastName of possibleLastNames) {
-    const key = lastName.toLowerCase();
+    const key = normalize(lastName);
     if (photoMappings[key]) {
       return photoMappings[key];
     }
   }
 
   // Buscar por nombre completo (contiene)
-  if (driver.full_name) {
-    const nameLower = driver.full_name.toLowerCase();
+  if (derivedFullName) {
+    const nameLower = normalize(derivedFullName);
     for (const [slug, path] of Object.entries(photoMappings)) {
       if (nameLower.includes(slug)) {
         return path;
@@ -284,8 +296,8 @@ export const getDriverPhoto = (driver) => {
   }
 
   // Buscar por acrónimo de nombre (ej: VER -> verstappen)
-  if (driver.name_acronym) {
-    const acronym = driver.name_acronym.toLowerCase();
+  if (driver.name_acronym || driver.code) {
+    const acronym = normalize(driver.name_acronym || driver.code);
     const acronymMappings = {
       'ver': 'verstappen',
       'ham': 'hamilton',

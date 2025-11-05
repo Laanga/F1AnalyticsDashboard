@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MapPin, Calendar, Clock, Trophy, Flag, Users, Timer, Medal, Activity, Zap, Target } from 'lucide-react';
+import { X, MapPin, Calendar, Clock, Trophy, Flag, Users, Timer, Medal, Activity, Zap, Target, Info } from 'lucide-react';
 import { formatearFecha, formatearFechaHora, getTiempoRestante, isCarreraCompletada } from '../../utils/dateUtils';
 import { getCompleteMeetingResults, categorizeSessionsByType } from '../../services/openf1Service';
 import { getDriverPhoto } from '../../utils/formatUtils';
+import { getTeamColor } from '../../utils/chartColors';
 
 /**
  * Modal para mostrar detalles completos de una carrera
@@ -19,6 +20,7 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
     sprint: [],
     race: []
   });
+  const [showEventInfo, setShowEventInfo] = useState(false);
 
   const isCompleted = carrera ? isCarreraCompletada(carrera.date_end) : false;
 
@@ -132,6 +134,8 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
         {sessions.map((session, sessionIndex) => {
           const sessionResults = meetingData?.sessions[session.session_key]?.results || [];
           const sessionInfo = meetingData?.sessions[session.session_key]?.session_info || session;
+          const typeTextForSession = String((sessionInfo.session_name || sessionInfo.session_type || sessionType || '')).toLowerCase();
+          const showTimeColumn = /race|sprint/.test(typeTextForSession);
           
           return (
             <div key={session.session_key} className="glass rounded-xl p-4">
@@ -145,108 +149,172 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
                 </span>
               </div>
               
-              {loadingMeeting ? (
-                <div className="text-center py-4">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-yellow-400 mx-auto"></div>
-                  <p className="text-white/60 mt-2 text-sm">Cargando resultados...</p>
-                </div>
-              ) : sessionResults.length > 0 ? (
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {sessionResults.slice(0, 20).map((result, index) => (
-                    <motion.div
-                      key={result.driver_number || index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.03 }}
-                      className="flex items-center justify-between p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <motion.div 
-                          className={`relative flex items-center justify-center w-10 h-10 rounded-xl font-bold text-sm shadow-lg border ${
-                            (result.position || index + 1) === 1 
-                              ? 'bg-gradient-to-br from-yellow-300 via-yellow-400 to-amber-500 text-black border-yellow-200/50 shadow-yellow-400/30' 
-                              : (result.position || index + 1) === 2 
-                              ? 'bg-gradient-to-br from-gray-300 via-gray-400 to-slate-500 text-black border-gray-200/50 shadow-gray-400/30'
-                              : (result.position || index + 1) === 3 
-                              ? 'bg-gradient-to-br from-amber-600 via-orange-500 to-amber-700 text-white border-amber-300/50 shadow-amber-500/30'
-                              : 'bg-gradient-to-br from-slate-600 via-slate-700 to-slate-800 text-white border-slate-400/30 shadow-slate-600/20'
-                          }`}
-                          whileHover={{ 
-                            scale: 1.1, 
-                            rotate: 5,
-                            boxShadow: (result.position || index + 1) <= 3 
-                              ? '0 10px 25px rgba(255, 215, 0, 0.4)' 
-                              : '0 10px 25px rgba(100, 116, 139, 0.3)'
-                          }}
-                          whileTap={{ scale: 0.95 }}
-                          transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                          style={{
-                            backdropFilter: 'blur(10px)',
-                            boxShadow: (result.position || index + 1) <= 3 
-                              ? '0 8px 20px rgba(255, 215, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3)' 
-                              : '0 8px 20px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-                          }}
-                        >
-                          {/* Efecto de brillo para el podio */}
-                          {(result.position || index + 1) <= 3 && (
-                            <motion.div
-                              className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                              animate={{
-                                x: ['-100%', '100%'],
-                              }}
-                              transition={{
-                                duration: 2,
-                                repeat: Infinity,
-                                repeatDelay: 3,
-                                ease: "easeInOut"
-                              }}
-                              style={{ clipPath: 'inset(0 0 0 0 round 12px)' }}
-                            />
-                          )}
-                          
-                          {/* Número de posición */}
-                          <span className="relative z-10 font-extrabold tracking-tight">
-                            {result.position || index + 1}
-                          </span>
-                          
+              {sessionResults.length > 0 ? (
+                <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+                  {/* Cabecera fija */}
+                  <div className="sticky top-0 z-10 grid grid-cols-12 gap-2 px-4 py-2 bg-black/40 backdrop-blur-sm border-b border-white/10">
+                    <div className="col-span-2 text-white/80 text-sm font-medium">Pos / Nº</div>
+                    <div className="col-span-4 text-white/80 text-sm font-medium">Piloto</div>
+                    <div className={`${showTimeColumn ? 'col-span-4' : 'col-span-6'} text-white/80 text-sm font-medium`}>Equipo</div>
+                    {showTimeColumn && (
+                      <div className="col-span-2 text-white/80 text-sm font-medium text-right">Tiempo / Gap</div>
+                    )}
+                  </div>
 
-                        </motion.div>
-                        <div>
-                          <p className="text-white font-medium text-sm">
-                            {result.driver_info?.full_name || result.driver_info?.broadcast_name || `Piloto #${result.driver_number}`}
-                          </p>
-                          <p className="text-white/60 text-xs">
-                            {result.driver_info?.team_name || 'Equipo no disponible'}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-end">
-                        <div className="relative">
-                          <img
-                            src={getDriverPhoto(result.driver_info) || '/drivers/default.png'}
-                            alt={result.driver_info?.full_name || `Piloto #${result.driver_number}`}
-                            className="w-8 h-8 rounded-full object-cover border-2 border-white/20"
-                            onError={(e) => {
-                              // Si la imagen falla, mostrar el fallback con número
-                              e.target.style.display = 'none';
-                              e.target.nextElementSibling.style.display = 'flex';
-                            }}
-                          />
+                  {sessionResults.slice(0, 20).map((result, index) => {
+                    const pos = result.position || index + 1;
+                    const teamName = result.driver_info?.team_name || 'Equipo no disponible';
+                    const teamColor = getTeamColor(teamName);
+                    const typeText = String((sessionInfo.session_name || sessionInfo.session_type || sessionType || '')).toLowerCase();
+                    const isRaceLike = /race|sprint/.test(typeText);
+                    const isPractice = /(practice|fp1|fp2|fp3|free practice)/.test(typeText);
+                    const isQualy = /(qualifying|q1|q2|q3)/.test(typeText);
+                    const gapOrInterval = result.gap_to_leader || result.interval;
+                    const lapOrTime = result.time || result.best_lap_time || result.duration;
+                    const statusCandidates = [result.status, result.finish_status, result.classification, result.status_text, result.result];
+                    const statusText = statusCandidates.find(Boolean);
+                    const s = statusText ? String(statusText).toUpperCase() : '';
+                    const posText = String(result.position_text || '').toUpperCase();
+                    const parseTimeToMs = (val) => {
+                      if (val == null) return null;
+                      if (typeof val === 'number') return val;
+                      // formatos esperados "M:SS.mmm" o "SS.mmm"
+                      const parts = String(val).trim().split(':');
+                      let ms = 0;
+                      if (parts.length === 2) {
+                        const m = parseInt(parts[0], 10) || 0;
+                        const s = parseFloat(parts[1]) || 0;
+                        ms = m * 60 * 1000 + s * 1000;
+                      } else {
+                        const s = parseFloat(parts[0]) || 0;
+                        ms = s * 1000;
+                      }
+                      return ms;
+                    };
+
+                    const pickQualyBest = (dur, gaps) => {
+                      // dur/gaps pueden ser arrays [Q1,Q2,Q3] o primitivos
+                      if (Array.isArray(dur)) {
+                        const candidates = dur.filter(Boolean);
+                        if (candidates.length === 0) return null;
+                        // Elegir mejor vuelta (mínimo tiempo)
+                        let best = candidates[0];
+                        let bestMs = parseTimeToMs(best);
+                        for (let i = 1; i < candidates.length; i++) {
+                          const ms = parseTimeToMs(candidates[i]);
+                          if (ms != null && (bestMs == null || ms < bestMs)) {
+                            best = candidates[i];
+                            bestMs = ms;
+                          }
+                        }
+                        return best;
+                      }
+                      return dur || (Array.isArray(gaps) ? gaps.filter(Boolean).slice(-1)[0] : gaps);
+                    };
+
+                    const timeOrGap = (() => {
+                      // Estados explícitos conocidos (prioridad alta)
+                      if (s.includes('DNF') || s.includes('RETIRED') || s === 'R' || posText.includes('DNF') || posText === 'R' || posText.includes('RET')) return 'DNF';
+                      if (s.includes('DNS') || posText.includes('DNS')) return 'DNS · No salió';
+                      if (s.includes('DSQ') || s.includes('DQ') || s.includes('DISQUALIFIED') || posText.includes('DSQ')) return 'DSQ · Descalificado';
+                      if (s.includes('NC') || s.includes('NOT CLASSIFIED') || posText.includes('NC')) return 'NC · No clasificado';
+
+                      // Libres: no mostrar tiempos
+                      if (isPractice) return '—';
+
+                      // Clasificación: no mostrar tiempos de momento
+                      if (isQualy) return '—';
+
+                      // Carrera/Sprint
+                      if (isRaceLike) {
+                        if (pos === 1) return '-';
+                        if (gapOrInterval) return gapOrInterval;
+                        if (lapOrTime) return lapOrTime;
+                        if (posText.includes('DNF') || posText === 'R' || posText.includes('RET')) return 'DNF';
+                        // Por defecto, si no hay datos mostrables en carrera, considerar DNF
+                        return 'DNF';
+                      }
+
+                      // Fallback: mejor tiempo si existe
+                      if (lapOrTime) return lapOrTime;
+                      return 'Sin tiempo';
+                    })();
+                    const driverName = result.driver_info?.full_name || result.driver_info?.broadcast_name || `Piloto #${result.driver_number}`;
+
+                    return (
+                      <motion.div
+                        key={result.driver_number || index}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.02 }}
+                        className="grid grid-cols-12 gap-3 items-center rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+                        style={{ borderLeft: `4px solid ${teamColor}` }}
+                      >
+                        {/* Pos / Nº */}
+                        <div className="col-span-2 flex items-center space-x-3 px-4 py-3">
                           <div 
-                            className="w-8 h-8 rounded-full bg-gradient-to-r from-gray-600 to-gray-700 flex items-center justify-center text-white font-bold text-xs border-2 border-white/20"
-                            style={{ display: 'none' }}
+                            className={`relative w-10 h-10 rounded-lg flex items-center justify-center text-sm font-extrabold shadow-lg border ${
+                              pos === 1
+                                ? 'bg-gradient-to-br from-yellow-300 via-yellow-400 to-amber-500 text-black border-yellow-200/50 shadow-yellow-400/30'
+                                : pos === 2
+                                ? 'bg-gradient-to-br from-gray-300 via-gray-400 to-slate-500 text-black border-gray-200/50 shadow-gray-400/30'
+                                : pos === 3
+                                ? 'bg-gradient-to-br from-amber-600 via-orange-500 to-amber-700 text-white border-amber-300/50 shadow-amber-500/30'
+                                : 'bg-gradient-to-br from-slate-600 via-slate-700 to-slate-800 text-white border-slate-400/30 shadow-slate-600/20'
+                            }`}
                           >
-                            {result.driver_number || '?'}
+                            {pos}
                           </div>
+                          <span className="text-white/80 text-sm">#{result.driver_number || '?'}</span>
                         </div>
-                      </div>
-                    </motion.div>
-                  ))}
+
+                        {/* Piloto */}
+                        <div className="col-span-4 flex items-center space-x-3 px-2 py-2">
+                          <div className="relative">
+                            <img
+                              src={getDriverPhoto(result.driver_info) || '/drivers/default.png'}
+                              alt={driverName}
+                              className="w-9 h-9 rounded-full object-cover border-2 border-white/20"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextElementSibling.style.display = 'flex';
+                              }}
+                            />
+                            <div 
+                              className="w-9 h-9 rounded-full bg-gradient-to-r from-gray-600 to-gray-700 flex items-center justify-center text-white font-bold text-xs border-2 border-white/20"
+                              style={{ display: 'none' }}
+                            >
+                              {result.driver_number || '?'}
+                            </div>
+                          </div>
+                          <p className="text-white font-semibold text-base truncate">{driverName}</p>
+                        </div>
+
+                        {/* Equipo */}
+                        <div className={`${showTimeColumn ? 'col-span-4' : 'col-span-6'} px-2 py-2`}>
+                          <p className="text-white/80 text-base truncate">{teamName}</p>
+                        </div>
+
+                        {/* Tiempo / Gap */}
+                        {showTimeColumn && (
+                          <div className="col-span-2 px-4 py-3 text-right">
+                            <p className="text-white text-base font-semibold">{timeOrGap}</p>
+                          </div>
+                        )}
+                      </motion.div>
+                    );
+                  })}
+
                   {sessionResults.length > 20 && (
                     <p className="text-white/60 text-center text-xs mt-2">
                       Mostrando top 20 de {sessionResults.length} pilotos
                     </p>
                   )}
+                </div>
+              ) : loadingMeeting ? (
+                <div className="text-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-yellow-400 mx-auto"></div>
+                  <p className="text-white/60 mt-2 text-sm">Cargando resultados...</p>
                 </div>
               ) : (
                 <div className="text-center py-4">
@@ -292,7 +360,7 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
               }}
             >
               {/* Header */}
-              <div className="relative p-6 border-b border-white/10" style={{
+              <div className="relative p-4 border-b border-white/10" style={{
                 background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
                 backdropFilter: 'blur(10px)'
               }}>
@@ -300,7 +368,7 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
                   onClick={onClose}
                   whileHover={{ scale: 1.1, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}
-                  className="absolute top-4 right-4 p-3 rounded-full glass border border-white/20 hover:border-white/30 transition-all duration-300"
+                  className="absolute top-3 right-3 p-2.5 rounded-full glass border border-white/20 hover:border-white/30 transition-all duration-300"
                   style={{
                     background: 'rgba(255, 255, 255, 0.1)',
                     backdropFilter: 'blur(10px)'
@@ -313,13 +381,13 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
-                  className="flex items-start space-x-4"
+                  className="flex items-start space-x-3"
                 >
                   <motion.div 
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                    className={`w-16 h-16 rounded-2xl flex items-center justify-center glass border border-white/20 shadow-glass ${
+                    className={`w-10 h-10 rounded-2xl flex items-center justify-center glass border border-white/20 shadow-glass ${
                       isCompleted 
                         ? 'bg-gradient-to-br from-green-500/30 to-green-600/30' 
                         : 'bg-gradient-to-br from-blue-500/30 to-blue-600/30'
@@ -331,7 +399,7 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
                         : '0 8px 25px rgba(59, 130, 246, 0.3)'
                     }}
                   >
-                    <span className="text-2xl font-bold text-white">
+                    <span className="text-xl font-bold text-white">
                       {carrera.session_name?.replace('Race', 'R') || 'R'}
                     </span>
                   </motion.div>
@@ -341,7 +409,7 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.3 }}
-                      className="text-2xl font-bold text-white mb-2 text-glow"
+                      className="text-lg font-bold text-white mb-1"
                     >
                       {meeting?.meeting_name || carrera.session_name || 'Gran Premio'}
                     </motion.h2>
@@ -349,7 +417,7 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.4 }}
-                      className="flex items-center space-x-4 text-white/60"
+                      className="flex items-center space-x-2 text-white/60 text-xs"
                     >
                       <div className="flex items-center space-x-1">
                         <MapPin className="w-4 h-4" />
@@ -436,42 +504,67 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
                 )}
 
                  {/* Meeting Information */}
-                 {!loadingMeeting && meeting && (
-                   <motion.div 
-                     initial={{ opacity: 0, y: 20 }}
-                     animate={{ opacity: 1, y: 0 }}
-                     transition={{ delay: 0.2 }}
-                     className="glass glass-hover rounded-2xl p-6 border border-white/10"
-                     style={{
-                       background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)',
-                       backdropFilter: 'blur(10px)'
-                     }}
-                   >
-                    <div className="flex items-center space-x-2 mb-3">
-                      <Users className="w-5 h-5 text-purple-400" />
-                      <h3 className="font-semibold text-white">Información del Evento</h3>
+                {!loadingMeeting && meeting && (
+                  <>
+                    <div className="flex justify-end">
+                      <motion.button
+                        onClick={() => setShowEventInfo(v => !v)}
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        className={`inline-flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 border ${
+                          showEventInfo
+                            ? 'glass text-white border-white/20 shadow-glass'
+                            : 'text-white/80 glass-hover border-white/10 hover:text-white'
+                        }`}
+                        style={{
+                          background: showEventInfo
+                            ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(147, 51, 234, 0.25) 100%)'
+                            : 'rgba(255,255,255,0.08)',
+                          backdropFilter: 'blur(8px)'
+                        }}
+                      >
+                        <Info className="w-3.5 h-3.5 text-white/90" />
+                        <span>{showEventInfo ? 'Ocultar info del evento' : 'Mostrar info del evento'}</span>
+                      </motion.button>
                     </div>
-                    <div className="grid grid-cols-2 gap-4 text-white/80">
-                      <div className="flex justify-between">
-                        <span>País:</span>
-                        <span>{meeting.country_name || 'No disponible'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Circuito:</span>
-                        <span>{meeting.circuit_short_name || meeting.location || 'No disponible'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Año:</span>
-                        <span>{meeting.year || new Date(carrera.date_start).getFullYear()}</span>
-                      </div>
-                      {meeting.gmt_offset && (
-                        <div className="flex justify-between">
-                          <span>Zona Horaria:</span>
-                          <span>GMT{meeting.gmt_offset}</span>
+                    {showEventInfo && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="glass glass-hover rounded-2xl p-4 border border-white/10"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)',
+                          backdropFilter: 'blur(10px)'
+                        }}
+                      >
+                        <div className="flex items-center space-x-2 mb-3">
+                          <Users className="w-5 h-5 text-purple-400" />
+                          <h3 className="font-semibold text-white text-sm">Información del Evento</h3>
                         </div>
-                      )}
-                    </div>
-                  </motion.div>
+                        <div className="grid grid-cols-2 gap-2 text-white/80 text-sm">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-white/90">País:</span>
+                            <span className="truncate">{meeting.country_name || 'No disponible'}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-white/90">Circuito:</span>
+                            <span className="truncate">{meeting.circuit_short_name || meeting.location || 'No disponible'}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-white/90">Año:</span>
+                            <span className="truncate">{meeting.year || new Date(carrera.date_start).getFullYear()}</span>
+                          </div>
+                          {meeting.gmt_offset && (
+                            <div className="flex items-center space-x-2">
+                              <span className="text-white/90">Zona Horaria:</span>
+                              <span className="truncate">GMT{meeting.gmt_offset}</span>
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </>
                 )}
 
                 {/* Session Tabs */}
@@ -480,9 +573,9 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="glass rounded-2xl p-2 border border-white/10"
+                    className="glass rounded-2xl p-1.5 border border-white/10"
                     style={{
-                      background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
+                      background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
                       backdropFilter: 'blur(15px)'
                     }}
                   >
@@ -494,7 +587,7 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
                           key={tab}
                           onClick={() => setActiveTab(tab)}
                           disabled={!hasData}
-                          whileHover={hasData ? { scale: 1.02, y: -1 } : {}}
+                          whileHover={hasData ? { scale: 1.02 } : {}}
                           whileTap={hasData ? { scale: 0.98 } : {}}
                           className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl text-sm font-medium transition-all duration-300 ${
                             activeTab === tab
@@ -515,12 +608,12 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
                           >
                             {getSessionIcon(tab)}
                           </motion.div>
-                          <span>{getSessionName(tab)}</span>
+                          <span className="text-sm">{getSessionName(tab)}</span>
                           {hasData && (
                             <motion.span 
                               initial={{ scale: 0 }}
                               animate={{ scale: 1 }}
-                              className="glass text-xs px-2 py-1 rounded-full border border-white/20"
+                              className="glass text-xs px-2 py-0.5 rounded-full border border-white/20"
                               style={{
                                 background: 'rgba(255, 255, 255, 0.1)',
                                 backdropFilter: 'blur(5px)'

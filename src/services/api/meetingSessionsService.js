@@ -58,9 +58,19 @@ export const getSessionResults = async (sessionKey, sessionType) => {
 
   try {
     let results = [];
-    
-    // Para carreras y sprints, intentar primero session_result
-    if (sessionType === 'Race' || sessionType === 'Sprint') {
+    const typeText = String(sessionType || '').toLowerCase();
+    const trySessionResultFirst = (
+      typeText.includes('race') ||
+      typeText.includes('sprint') ||
+      typeText.includes('qualifying') ||
+      typeText.includes('quali') ||
+      typeText.includes('q1') ||
+      typeText.includes('q2') ||
+      typeText.includes('q3')
+    );
+
+    // Para carrera, sprint y clasificación, intentar primero session_result
+    if (trySessionResultFirst) {
       try {
         const sessionResultResponse = await safeRequest(`${API_CONFIG.OPENF1.BASE_URL}/session_result`, {
           params: { session_key: sessionKey }
@@ -148,19 +158,17 @@ export const getCompleteMeetingResults = async (meetingKey) => {
     const sessions = await getMeetingSessions(meetingKey);
     const sessionResults = {};
     
-    // Procesar sesiones secuencialmente con delays para evitar rate limiting
+    // Procesar sesiones secuencialmente (el rate limiter ya controla las peticiones)
     for (let i = 0; i < sessions.length; i++) {
       const session = sessions[i];
       const sessionType = session.session_name || session.session_type;
       
       try {
-        // Obtener resultados y pilotos secuencialmente
-        const results = await getSessionResults(session.session_key, sessionType);
-        
-        // Delay entre peticiones para evitar rate limiting
-        await delay(300); // 300ms entre peticiones
-        
-        const drivers = await getSessionDrivers(session.session_key);
+        // Obtener resultados y pilotos en paralelo (el rate limiter serializa si es necesario)
+        const [results, drivers] = await Promise.all([
+          getSessionResults(session.session_key, sessionType),
+          getSessionDrivers(session.session_key)
+        ]);
         
         // Combinar resultados con información de pilotos
         const completeResults = results.map(result => {
@@ -177,10 +185,7 @@ export const getCompleteMeetingResults = async (meetingKey) => {
           session_type: sessionType
         };
         
-        // Delay adicional entre sesiones
-        if (i < sessions.length - 1) {
-          await delay(500); // 500ms entre sesiones
-        }
+        // Sin delay adicional: el rate limiter y la cola ya gestionan el ritmo
         
       } catch (sessionError) {
         console.error(`❌ Error al procesar sesión ${session.session_key}:`, sessionError.message);

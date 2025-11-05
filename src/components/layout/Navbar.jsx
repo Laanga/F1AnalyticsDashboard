@@ -78,14 +78,8 @@ const Navbar = () => {
         '-=0.6'
       );
 
-      // Animación continua del logo (pulso sutil)
-      gsap.to(logoRef.current, {
-        scale: 1.05,
-        duration: 2,
-        repeat: -1,
-        yoyo: true,
-        ease: 'sine.inOut',
-      });
+      // Logo estático: sin animación de pulso continua
+      gsap.set(logoRef.current, { scale: 1 });
     }
   }, []);
 
@@ -201,15 +195,15 @@ const Navbar = () => {
               {/* Círculo de fondo animado */}
               <motion.div
                 animate={{
-                  scale: [1, 1.2, 1],
-                  opacity: [0.3, 0.5, 0.3],
+                  scale: [1, 1.06, 1],
+                  opacity: [0.18, 0.3, 0.18],
                 }}
                 transition={{
-                  duration: 2,
+                  duration: 4,
                   repeat: Infinity,
                   ease: 'easeInOut',
                 }}
-                className="absolute inset-0 bg-f1-red/20 rounded-full blur-lg -z-10"
+                className="absolute inset-0 bg-f1-red/15 rounded-full blur-lg -z-10"
               />
               
               <div className="text-f1-red text-2xl font-black tracking-tighter">
@@ -229,21 +223,21 @@ const Navbar = () => {
               />
             </div>
 
-            {/* Partículas decorativas */}
+            {/* Partículas decorativas (más sutiles) */}
             <div className="absolute -inset-2 pointer-events-none">
-              {[...Array(3)].map((_, i) => (
+              {[...Array(2)].map((_, i) => (
                 <motion.div
                   key={i}
                   animate={{
-                    y: [0, -20, 0],
-                    opacity: [0, 0.6, 0],
-                    scale: [0, 1, 0],
+                    y: [0, -10, 0],
+                    opacity: [0, 0.25, 0],
+                    scale: [0, 0.8, 0],
                   }}
                   transition={{
-                    duration: 2,
+                    duration: 5,
                     repeat: Infinity,
-                    delay: i * 0.7,
-                    ease: 'easeOut',
+                    delay: i * 1.2,
+                    ease: 'easeInOut',
                   }}
                   className="absolute w-1 h-1 bg-f1-red rounded-full"
                   style={{
