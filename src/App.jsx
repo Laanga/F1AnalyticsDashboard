@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import { YearProvider } from './contexts/YearContext';
 import Navbar from './components/layout/Navbar';
 import FondoAnimado from './components/ui/FondoAnimado';
@@ -49,6 +50,7 @@ const App = () => {
     <Router>
       <YearProvider>
         <AppContent />
+        <Analytics />
       </YearProvider>
     </Router>
   );
