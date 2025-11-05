@@ -251,7 +251,7 @@ Las contribuciones son bienvenidas. Si quieres mejorar el proyecto:
 
 - 💼 LinkedIn: [Álvaro Langa](https://www.linkedin.com/in/%C3%A1lvaro-langa-dev/)
 - 🐱 GitHub: [@Laanga](https://github.com/Laanga)
-- 🌐 Portfolio: [alvarolangadev](alvarolangadev.vercel.app)
+- 🌐 Portfolio: [alvarolangadev](https://alvarolangadev.vercel.app)
 
 ---
 
