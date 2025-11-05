@@ -225,7 +225,6 @@ export const getChampionshipStandings = async (options = {}) => {
  * @returns {Object} Datos corregidos
  */
 const applyTeamCorrections = (data) => {
-  console.log('\ud83d\udd27 Aplicando correcciones de equipos para 2025...');
   
   // Primero, corregir los drivers individuales
   data.drivers = data.drivers.map(driver => {
@@ -234,7 +233,6 @@ const applyTeamCorrections = (data) => {
     
     // Corrección específica para Tsunoda - DEBE IR A RED BULL RACING (promovido en 2025)
     if (driverKey === 'tsu' || (fullNameKey && fullNameKey.includes('tsunoda'))) {
-      console.log('\u2705 Corrigiendo Tsunoda -> Red Bull Racing');
       return {
         ...driver,
         team_name: 'Red Bull',
@@ -244,7 +242,6 @@ const applyTeamCorrections = (data) => {
     
     // Corrección específica para Lawson - DEBE IR A RACING BULLS (degradado en 2025)
     if (driverKey === 'law' || (fullNameKey && fullNameKey.includes('lawson'))) {
-      console.log('\u2705 Corrigiendo Lawson -> Racing Bulls');
       return {
         ...driver,
         team_name: 'RB F1 Team',
@@ -269,14 +266,12 @@ const applyTeamCorrections = (data) => {
         const dKey = d.name_acronym?.toLowerCase();
         return dKey === 'ver' || dKey === 'tsu';
       });
-      console.log('\ud83d\udee0\ufe0f Red Bull Racing pilotos:', teamDrivers.map(d => d.name_acronym).join(', '));
     } else if (teamName.includes('rb') || teamName.includes('racing bulls')) {
       // Racing Bulls - Debe tener Lawson y Hadjar
       teamDrivers = data.drivers.filter(d => {
         const dKey = d.name_acronym?.toLowerCase();
         return dKey === 'law' || dKey === 'had';
       });
-      console.log('\ud83d\udee0\ufe0f Racing Bulls pilotos:', teamDrivers.map(d => d.name_acronym).join(', '));
     } else {
       // Para otros equipos, mantener sus pilotos originales
       teamDrivers = constructor.drivers;
@@ -288,6 +283,5 @@ const applyTeamCorrections = (data) => {
     };
   });
 
-  console.log('\u2705 Correcciones aplicadas exitosamente');
   return data;
 };

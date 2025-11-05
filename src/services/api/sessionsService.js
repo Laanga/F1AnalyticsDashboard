@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { API_CONFIG, getCurrentYear } from '../config/apiConfig.js';
-import { getCachedData, setCachedData, delay } from '../utils/cache.js';
+import { getCachedData, setCachedData } from '../utils/cache.js';
 import { getSelectedYear } from '../../hooks/useSelectedYear.js';
 import { safeRequest } from '../utils/rateLimiter.js';
 
@@ -37,6 +37,7 @@ export const getSessions = async (sessionName = null) => {
     return filteredSessions;
   } catch (error) {
     console.error('❌ Error al obtener sesiones:', error.message);
+    // Usar cache antiguo si existe
     
     const oldCachedData = getCachedData(cacheKey, true);
     if (oldCachedData && oldCachedData.length > 0) {
@@ -117,7 +118,7 @@ export const getRaces = async (options = {}) => {
       try {
         futureRaces = await getFutureRacesFromErgast(selectedYear);
       } catch (futureError) {
-        console.warn('⚠️ Error al obtener carreras futuras, continuando solo con históricas:', futureError.message);
+        console.error('❌ Error al obtener carreras futuras desde Ergast:', futureError.message);
         futureRaces = [];
       }
     }
@@ -128,7 +129,8 @@ export const getRaces = async (options = {}) => {
     
     return allRaces;
   } catch (error) {
-    console.error('❌ Error al obtener carreras combinadas:', error.message);
+    console.error('❌ Error al obtener carreras:', error.message);
+    // Intentar fallback
     
     try {
       const fallbackRaces = await getSessions('Race');
@@ -138,22 +140,13 @@ export const getRaces = async (options = {}) => {
       });
       return filteredFallback;
     } catch (fallbackError) {
-      console.error('❌ Error en fallback:', fallbackError.message);
+      console.error('❌ Error en fallback de carreras:', fallbackError.message);
       return [];
     }
   }
 };
 
-export const getLatestSession = async () => {
-  try {
-    const sessions = await getSessions();
-    const latestSession = sessions.sort((a, b) => new Date(b.date_start) - new Date(a.date_start))[0];
-    return latestSession || null;
-  } catch (error) {
-    console.error('❌ Error al obtener última sesión:', error.message);
-    return null;
-  }
-};
+// getLatestSession eliminado por no usarse
 
 export const getFutureMeetingsFromErgast = async (year) => {
   const cacheKey = `future_meetings_ergast_${year}`;
@@ -243,62 +236,8 @@ export const getMeetings = async (options = {}) => {
   }
 };
 
-export const getPositions = async (sessionKey) => {
-  const cacheKey = `positions_${sessionKey}`;
-  
-  const cachedData = getCachedData(cacheKey);
-  if (cachedData) {
-    return cachedData;
-  }
+// getPositions eliminado por no usarse
 
-  try {
-    const response = await safeRequest(`${API_CONFIG.OPENF1.BASE_URL}/position`, {
-      params: { session_key: sessionKey }
-    });
-    
-    const positions = response.data || [];
-    setCachedData(cacheKey, positions);
-    return positions;
-  } catch (error) {
-    console.error(`❌ Error al obtener posiciones para sesión ${sessionKey}:`, error.message);
-    
-    const oldCachedData = getCachedData(cacheKey, true);
-    if (oldCachedData && oldCachedData.length > 0) {
-      return oldCachedData;
-    }
-    
-    return [];
-  }
-};
+// getLaps eliminado por no usarse
 
-export const getLaps = async (sessionKey) => {
-  try {
-    const response = await axios.get(`${API_CONFIG.OPENF1.BASE_URL}/laps`, {
-      params: { session_key: sessionKey }
-    });
-    
-    return response.data || [];
-  } catch (error) {
-    console.error(`❌ Error al obtener vueltas para sesión ${sessionKey}:`, error.message);
-    return [];
-  }
-};
-
-export const getLastSession = async () => {
-  try {
-    const sessions = await getSessions();
-    
-    if (!sessions || sessions.length === 0) {
-      return null;
-    }
-
-    const sortedSessions = sessions
-      .filter(session => new Date(session.date_start) <= new Date())
-      .sort((a, b) => new Date(b.date_start) - new Date(a.date_start));
-
-    return sortedSessions[0] || null;
-  } catch (error) {
-    console.error('Error obteniendo última sesión:', error);
-    return null;
-  }
-};
+// getLastSession eliminado por no usarse

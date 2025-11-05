@@ -1,11 +1,9 @@
 import axios from 'axios';
 import { API_CONFIG, getCurrentYear } from '../config/apiConfig.js';
-import { getCachedData, setCachedData, delay, clearCache } from '../utils/cache.js';
+import { getCachedData, setCachedData } from '../utils/cache.js';
 import { getSelectedYear } from '../../hooks/useSelectedYear.js';
 
-export const clearDriversCache = () => {
-  clearCache();
-};
+// clearDriversCache eliminado por no usarse
 
 export const getDrivers = async (options = {}) => {
   const { signal } = options;

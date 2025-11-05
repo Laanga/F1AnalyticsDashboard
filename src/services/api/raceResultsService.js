@@ -14,7 +14,6 @@ import { safeRequest } from '../utils/rateLimiter.js';
  */
 export const getRaceResults = async (sessionKey) => {
   if (!sessionKey) {
-    console.warn('⚠️ No se proporcionó session_key para obtener resultados');
     return [];
   }
 
@@ -65,7 +64,7 @@ export const getRaceResults = async (sessionKey) => {
     return [];
 
   } catch (error) {
-    console.error(`❌ Error al obtener resultados para sesión ${sessionKey}:`, error.message);
+    console.error(`❌ Error al obtener resultados de carrera para sesión ${sessionKey}:`, error.message);
     return [];
   }
 };
@@ -77,7 +76,6 @@ export const getRaceResults = async (sessionKey) => {
  */
 export const getSessionDrivers = async (sessionKey) => {
   if (!sessionKey) {
-    console.warn('⚠️ No se proporcionó session_key para obtener pilotos');
     return [];
   }
 

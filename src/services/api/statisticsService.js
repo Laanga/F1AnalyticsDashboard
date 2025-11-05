@@ -158,7 +158,7 @@ export const getStatistics = async (options = {}) => {
     return statistics;
 
   } catch (error) {
-    console.error('❌ Error al generar estadísticas:', error.message);
+    // Silenciar error al generar estadísticas
     return {
       totalDrivers: 0,
       totalRaces: getTotalRacesForYear(selectedYear),
@@ -198,7 +198,6 @@ const getRaceCalendarFromErgast = async (year) => {
     const data = await response.json();
     
     if (!data.MRData?.RaceTable?.Races) {
-      console.warn(`⚠️ No hay calendario disponible para ${year}`);
       return [];
     }
 
@@ -209,7 +208,7 @@ const getRaceCalendarFromErgast = async (year) => {
     return races;
 
   } catch (error) {
-    console.error(`❌ Error al obtener calendario de Ergast para ${year}:`, error.message);
+    // Silenciar error al obtener calendario de Ergast
     return [];
   }
 };
@@ -230,7 +229,6 @@ export const getPointsEvolution = async (topCount = 3) => {
     const raceCalendar = await getRaceCalendarFromErgast(selectedYear);
 
     if (!raceCalendar || raceCalendar.length === 0) {
-      console.warn(`⚠️ No hay calendario disponible para ${selectedYear}`);
       return { evolutionData: [], lineConfig: [], totalRaces: 0, racesWithResults: 0, racesShown: 0, futureRacesShown: 0 };
     }
 
@@ -239,7 +237,6 @@ export const getPointsEvolution = async (topCount = 3) => {
     const topDrivers = currentStandings.slice(0, topCount);
 
     if (topDrivers.length === 0) {
-      console.warn(`⚠️ No hay datos de pilotos disponibles para ${selectedYear}`);
       return { evolutionData: [], lineConfig: [], totalRaces: 0, racesWithResults: 0, racesShown: 0, futureRacesShown: 0 };
     }
 
@@ -307,7 +304,6 @@ export const getPointsEvolution = async (topCount = 3) => {
              });
           }
         } catch (error) {
-           console.warn(`⚠️ Error al obtener standings para carrera ${race.round}:`, error.message);
            // En caso de error, usar los puntos de la carrera anterior o 0
            topDrivers.forEach(driver => {
              const driverKey = `driver_${driver.driver.driverId}`;
@@ -355,7 +351,7 @@ export const getPointsEvolution = async (topCount = 3) => {
     return result;
 
   } catch (error) {
-    console.error('❌ Error al generar evolución de puntos:', error.message);
+    // Silenciar error al generar evolución de puntos
     return { evolutionData: [], lineConfig: [], totalRaces: 0, racesWithResults: 0, racesShown: 0, futureRacesShown: 0, hasRealData: false };
   }
 };
@@ -390,7 +386,7 @@ export const getSeasonProgress = async () => {
     return progress;
 
   } catch (error) {
-    console.error('❌ Error al calcular progreso:', error.message);
+    // Silenciar error al calcular progreso
     return {
       totalRaces: getTotalRacesForYear(selectedYear),
       completedRaces: 0,

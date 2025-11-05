@@ -98,27 +98,22 @@ export const requestWithRetry = async (url, config = {}, maxRetries = MAX_RETRIE
       
       // Si es error 429 (rate limit), siempre reintentar
       if (error.response?.status === 429) {
-        console.warn(`⚠️ Rate limit alcanzado (429) en intento ${attempt + 1}. Reintentando...`);
         continue;
       }
       
       // Si es error de red o timeout, reintentar
       if (error.code === 'ECONNABORTED' || error.code === 'ENOTFOUND' || !error.response) {
-        console.warn(`⚠️ Error de red en intento ${attempt + 1}: ${error.message}. Reintentando...`);
         continue;
       }
       
       // Para otros errores HTTP, no reintentar
       if (error.response?.status >= 400 && error.response?.status < 500 && error.response?.status !== 429) {
-        console.error(`❌ Error HTTP ${error.response.status}, no reintentando: ${url}`);
+        console.error(`❌ Error HTTP ${error.response.status} en ${url}. No se reintenta.`, error.message);
         throw error;
       }
-      
-      console.warn(`⚠️ Error en intento ${attempt + 1}: ${error.message}`);
     }
   }
-  
-  console.error(`❌ Todos los reintentos fallaron para: ${url}`);
+  console.error(`❌ Todos los reintentos fallaron para ${url}.`, lastError?.message || lastError);
   throw lastError;
 };
 

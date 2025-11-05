@@ -58,7 +58,7 @@ const Pilotos = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 overflow-x-hidden">
         <Loader mensaje="Cargando pilotos..." />
       </div>
     );
@@ -66,7 +66,7 @@ const Pilotos = () => {
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 overflow-x-hidden">
         <div className="glass rounded-2xl p-8 text-center">
           <p className="text-white/70">Error al cargar pilotos: {error}</p>
         </div>
@@ -98,7 +98,7 @@ const Pilotos = () => {
   }));
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 overflow-x-hidden">
       <motion.div
         initial={{ opacity: 0, y: -30, scale: 0.9 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -143,7 +143,7 @@ const Pilotos = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1, duration: 0.6, ease: "easeOut" }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"
           >
             {sortedPilotos.map((piloto, index) => (
               <motion.div
@@ -197,10 +197,10 @@ const Pilotos = () => {
                 stiffness: 300,
                 duration: 0.6
               }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+              className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4"
             >
               <div 
-                className="glass rounded-3xl p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto relative"
+                className="glass rounded-3xl p-4 sm:p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto relative"
                 style={{
                   background: pilotoSeleccionado.team_colour ? 
                     `linear-gradient(135deg, rgba(${parseInt(pilotoSeleccionado.team_colour.slice(0,2), 16)}, ${parseInt(pilotoSeleccionado.team_colour.slice(2,4), 16)}, ${parseInt(pilotoSeleccionado.team_colour.slice(4,6), 16)}, 0.1) 0%, rgba(0, 0, 0, 0.8) 100%)` :
@@ -214,7 +214,7 @@ const Pilotos = () => {
                 }}
               >
                 <div className="flex items-start justify-between mb-8">
-                  <div className="flex items-start space-x-6">
+                  <div className="flex items-start space-x-4 sm:space-x-6">
                     {pilotoSeleccionado.headshot_url ? (
                       <motion.div
                         initial={{ scale: 0.8, opacity: 0 }}

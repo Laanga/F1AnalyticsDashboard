@@ -119,14 +119,14 @@ const Carreras = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 overflow-x-hidden">
         <Loader mensaje="Cargando carreras..." />
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 overflow-x-hidden">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -167,7 +167,7 @@ const Carreras = () => {
         className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10"
       >
         <motion.div 
-          className="glass glass-hover rounded-2xl p-6 group"
+          className="glass glass-hover rounded-2xl p-4 sm:p-6 group"
           whileHover={{ scale: 1.02, y: -5 }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
         >
@@ -194,7 +194,7 @@ const Carreras = () => {
         </motion.div>
 
         <motion.div 
-          className="glass glass-hover rounded-2xl p-6 group"
+          className="glass glass-hover rounded-2xl p-4 sm:p-6 group"
           whileHover={{ scale: 1.02, y: -5 }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
         >
@@ -218,7 +218,7 @@ const Carreras = () => {
         </motion.div>
 
         <motion.div 
-          className="glass glass-hover rounded-2xl p-6 group"
+          className="glass glass-hover rounded-2xl p-4 sm:p-6 group"
           whileHover={{ scale: 1.02, y: -5 }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
         >
@@ -273,12 +273,12 @@ const Carreras = () => {
                     }}
                     onClick={() => openRaceModal(carrera)}
                     onMouseEnter={() => prefetchMeeting(meeting?.meeting_key || carrera.meeting_key)}
-                    className="px-6 py-5 transition-all duration-300 cursor-pointer border-l-4 border-transparent hover:border-blue-400"
+                    className="px-4 sm:px-6 py-4 sm:py-5 transition-all duration-300 cursor-pointer border-l-4 border-transparent hover:border-blue-400"
                   >
                     <div className="flex flex-col md:flex-row md:items-center justify-between space-y-3 md:space-y-0">
-                      <div className="flex items-start md:items-center space-x-4 flex-1">
+                      <div className="flex items-start md:items-center space-x-3 sm:space-x-4 flex-1">
                         <motion.div 
-                          className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/20"
+                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/20"
                           whileHover={{ 
                             scale: 1.1, 
                             rotate: 5,
@@ -287,7 +287,7 @@ const Carreras = () => {
                           transition={{ type: "spring", stiffness: 400, damping: 10 }}
                         >
                           <motion.span 
-                            className="text-white font-bold text-lg"
+                            className="text-white font-bold text-base sm:text-lg"
                             whileHover={{ scale: 1.1 }}
                           >
                             {index + 1}
@@ -295,7 +295,7 @@ const Carreras = () => {
                         </motion.div>
 
                         <div className="flex-1">
-                          <h3 className="text-white font-bold text-lg mb-1 flex items-center space-x-2">
+                          <h3 className="text-white font-bold text-base sm:text-lg mb-1 flex items-center space-x-2">
                             <span>{meeting?.meeting_name || 'Gran Premio'}</span>
                             <Clock className="w-5 h-5 text-blue-400" />
                           </h3>
@@ -315,7 +315,7 @@ const Carreras = () => {
                       </div>
 
                       <div className="flex items-center space-x-3">
-                        <div className="glass-dark px-4 py-2 rounded-lg">
+                        <div className="glass-dark px-3 sm:px-4 py-2 rounded-lg">
                           <p className="text-white/50 text-xs mb-1">Circuito</p>
                           <p className="text-white font-semibold text-sm">
                             {meeting?.circuit_short_name || 'N/A'}
@@ -339,7 +339,7 @@ const Carreras = () => {
           transition={{ delay: 0.6 }}
           className="glass rounded-2xl overflow-hidden"
         >
-          <div className="bg-white/5 px-6 py-4 border-b border-white/10">
+          <div className="bg-white/5 px-4 sm:px-6 py-3 sm:py-4 border-b border-white/10">
             <h2 className="text-xl font-bold text-white flex items-center space-x-2">
               <CheckCircle2 className="w-5 h-5 text-green-500" />
               <span>Carreras Completadas</span>
@@ -348,7 +348,7 @@ const Carreras = () => {
 
           <div className="divide-y divide-white/10">
             {carrerasCompletadas.length === 0 ? (
-              <div className="px-6 py-12 text-center text-white/50">
+              <div className="px-4 sm:px-6 py-10 sm:py-12 text-center text-white/50">
                 Todavía no hay carreras completadas en {selectedYear}
               </div>
             ) : (
@@ -368,12 +368,12 @@ const Carreras = () => {
                     }}
                     onClick={() => openRaceModal(carrera)}
                     onMouseEnter={() => prefetchMeeting(meeting?.meeting_key || carrera.meeting_key)}
-                    className="px-6 py-5 transition-all duration-300 cursor-pointer border-l-4 border-transparent hover:border-green-400"
+                    className="px-4 sm:px-6 py-4 sm:py-5 transition-all duration-300 cursor-pointer border-l-4 border-transparent hover:border-green-400"
                   >
                     <div className="flex flex-col md:flex-row md:items-center justify-between space-y-3 md:space-y-0">
-                      <div className="flex items-start md:items-center space-x-4 flex-1">
+                      <div className="flex items-start md:items-center space-x-3 sm:space-x-4 flex-1">
                         <motion.div 
-                          className="w-12 h-12 rounded-xl bg-gradient-f1 flex items-center justify-center flex-shrink-0 shadow-lg shadow-f1-red/20"
+                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-f1 flex items-center justify-center flex-shrink-0 shadow-lg shadow-f1-red/20"
                           whileHover={{ 
                             scale: 1.1, 
                             rotate: -5,
@@ -382,7 +382,7 @@ const Carreras = () => {
                           transition={{ type: "spring", stiffness: 400, damping: 10 }}
                         >
                           <motion.span 
-                            className="text-white font-bold text-lg"
+                            className="text-white font-bold text-base sm:text-lg"
                             whileHover={{ scale: 1.1 }}
                           >
                             {index + 1}
@@ -390,7 +390,7 @@ const Carreras = () => {
                         </motion.div>
 
                         <div className="flex-1">
-                          <h3 className="text-white font-bold text-lg mb-1 flex items-center space-x-2">
+                          <h3 className="text-white font-bold text-base sm:text-lg mb-1 flex items-center space-x-2">
                             <span>{meeting?.meeting_name || carrera.session_name || 'Carrera'}</span>
                             <CheckCircle2 className="w-5 h-5 text-green-500" />
                           </h3>
@@ -410,7 +410,7 @@ const Carreras = () => {
                       </div>
 
                       <div className="flex items-center space-x-3">
-                        <div className="glass-dark px-4 py-2 rounded-lg">
+                        <div className="glass-dark px-3 sm:px-4 py-2 rounded-lg">
                           <p className="text-white/50 text-xs mb-1">Circuito</p>
                           <p className="text-white font-semibold text-sm">
                             {meeting?.circuit_short_name || 'N/A'}

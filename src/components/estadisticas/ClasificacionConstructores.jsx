@@ -19,7 +19,7 @@ const ClasificacionConstructores = () => {
         setDataSource(data.length > 0 && data[0].points > 0 ? 'real' : 'base');
 
       } catch (error) {
-        console.error('Error al cargar constructores:', error);
+        console.error('❌ Error al cargar constructores:', error);
         setDataSource('error');
       } finally {
         setLoading(false);

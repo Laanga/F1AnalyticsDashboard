@@ -352,7 +352,7 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="glass glass-hover rounded-3xl border border-white/20 shadow-glass max-w-5xl w-full max-h-[90vh] overflow-y-auto"
+              className="glass glass-hover rounded-3xl border border-white/20 shadow-glass w-full sm:max-w-5xl max-w-[95vw] max-h-[90vh] overflow-y-auto overflow-x-hidden"
               style={{
                 background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
                 backdropFilter: 'blur(20px)',
@@ -360,7 +360,7 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
               }}
             >
               {/* Header */}
-              <div className="relative p-4 border-b border-white/10" style={{
+              <div className="relative p-4 sm:p-5 border-b border-white/10" style={{
                 background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
                 backdropFilter: 'blur(10px)'
               }}>
@@ -381,7 +381,7 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
-                  className="flex items-start space-x-3"
+                  className="flex flex-wrap items-start gap-3 sm:flex-nowrap sm:space-x-3"
                 >
                   <motion.div 
                     initial={{ scale: 0 }}
@@ -433,7 +433,7 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
               </div>
 
               {/* Content */}
-              <div className="p-6 space-y-6">
+              <div className="p-4 sm:p-6 space-y-6">
                 {/* Loading State */}
                 {loadingMeeting && (
                   <motion.div
@@ -542,7 +542,7 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
                           <Users className="w-5 h-5 text-purple-400" />
                           <h3 className="font-semibold text-white text-sm">Información del Evento</h3>
                         </div>
-                        <div className="grid grid-cols-2 gap-2 text-white/80 text-sm">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-white/80 text-sm">
                           <div className="flex items-center space-x-2">
                             <span className="text-white/90">País:</span>
                             <span className="truncate">{meeting.country_name || 'No disponible'}</span>
@@ -579,7 +579,7 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
                       backdropFilter: 'blur(15px)'
                     }}
                   >
-                    <div className="flex space-x-2">
+                    <div className="flex flex-wrap gap-2 sm:flex-nowrap sm:space-x-2">
                       {['practice', 'qualifying', 'sprint', 'race'].map((tab) => {
                       const hasData = categorizedSessions[tab]?.length > 0;
                       return (
@@ -589,7 +589,7 @@ const RaceModal = ({ isOpen, onClose, carrera, meeting }) => {
                           disabled={!hasData}
                           whileHover={hasData ? { scale: 1.02 } : {}}
                           whileTap={hasData ? { scale: 0.98 } : {}}
-                          className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl text-sm font-medium transition-all duration-300 ${
+                          className={`flex-1 min-w-[140px] flex items-center justify-center space-x-2 py-2 px-3 sm:py-3 sm:px-4 rounded-xl text-sm font-medium transition-all duration-300 ${
                             activeTab === tab
                               ? 'glass text-white shadow-glass border border-white/20'
                               : hasData

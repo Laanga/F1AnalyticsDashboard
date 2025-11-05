@@ -317,7 +317,7 @@ const Estadisticas = () => {
 
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 overflow-x-hidden">
       {/* Header */}
       <div ref={headerRef}>
         <motion.div
@@ -359,7 +359,7 @@ const Estadisticas = () => {
       {/* Clasificación de Pilotos */}
       <div ref={clasificacionRef}>
         <motion.div 
-          className="glass glass-hover rounded-3xl p-8 shadow-glass mb-10"
+          className="glass glass-hover rounded-3xl p-4 sm:p-8 shadow-glass mb-10"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.6 }}
@@ -386,7 +386,7 @@ const Estadisticas = () => {
                 <motion.div
                   key={driver.driver_number || index}
                   className={`
-                    clasificacion-item glass glass-hover rounded-2xl p-6 border transition-all duration-300
+                    clasificacion-item glass glass-hover rounded-2xl p-4 sm:p-6 border transition-all duration-300
                     ${index < 3 
                       ? `border-yellow-400/30 bg-gradient-to-r ${
                           index === 0 ? 'from-yellow-400/20 to-yellow-600/10' :
@@ -405,12 +405,12 @@ const Estadisticas = () => {
                     boxShadow: "0 10px 30px rgba(225, 6, 0, 0.2)"
                   }}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-6">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 sm:gap-6 min-w-0">
                       {/* Posición */}
                       <motion.div 
                         className={`
-                          relative w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg overflow-hidden
+                          relative w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center font-bold text-lg overflow-hidden
                           ${index === 0 
                             ? 'bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 text-black border border-yellow-300/50' :
                             index === 1 
@@ -465,7 +465,7 @@ const Estadisticas = () => {
                         whileHover={{ scale: 1.1, rotate: 3 }}
                         transition={{ type: "spring", stiffness: 400, damping: 10 }}
                       >
-                        <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 bg-gradient-to-br from-slate-800 to-slate-900">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 bg-gradient-to-br from-slate-800 to-slate-900">
                           <img
                             src={getDriverPhoto(driver.driver) || '/drivers/default.png'}
                             alt={`${driver.driver?.givenName} ${driver.driver?.familyName}`}
@@ -484,8 +484,8 @@ const Estadisticas = () => {
                       </motion.div>
 
                       {/* Información del piloto */}
-                      <div className="flex-1">
-                        <h3 className="text-white font-bold text-xl mb-1">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-white font-bold text-base sm:text-xl mb-1 truncate">
                           {driver.driver?.givenName} {driver.driver?.familyName}
                         </h3>
                         <p className="text-white/60 text-sm font-medium">
@@ -495,12 +495,12 @@ const Estadisticas = () => {
                     </div>
 
                     {/* Estadísticas */}
-                    <div className="flex items-center space-x-8">
+                    <div className="flex sm:flex-row items-center gap-6 sm:gap-8 w-full sm:w-auto justify-start sm:justify-end">
                       <motion.div 
                         className="text-center"
                         whileHover={{ scale: 1.05 }}
                       >
-                        <p className="text-2xl font-bold text-white">{driver.points || 0}</p>
+                        <p className="text-xl sm:text-2xl font-bold text-white">{driver.points || 0}</p>
                         <p className="text-white/60 text-sm">Puntos</p>
                       </motion.div>
                       
@@ -508,7 +508,7 @@ const Estadisticas = () => {
                         className="text-center"
                         whileHover={{ scale: 1.05 }}
                       >
-                        <p className="text-2xl font-bold text-yellow-400">{driver.wins || 0}</p>
+                        <p className="text-xl sm:text-2xl font-bold text-yellow-400">{driver.wins || 0}</p>
                         <p className="text-white/60 text-sm">Victorias</p>
                       </motion.div>
                     </div>

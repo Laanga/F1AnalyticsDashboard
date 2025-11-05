@@ -71,7 +71,7 @@ const Equipos = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 overflow-x-hidden">
         <Loader mensaje="Cargando equipos..." />
       </div>
     );
@@ -79,7 +79,7 @@ const Equipos = () => {
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 overflow-x-hidden">
         <div className="glass rounded-2xl p-8 text-center">
           <p className="text-white/70">Error al cargar equipos: {error}</p>
         </div>
@@ -88,9 +88,9 @@ const Equipos = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 overflow-x-hidden">
       <div className="mb-10 relative animate__animated animate__fadeInDown">
-        <div className="flex items-center space-x-4 mb-4">
+        <div className="flex items-center space-x-3 sm:space-x-4 mb-4">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-f1-red to-red-700 flex items-center justify-center shadow-lg hover:animate__animated hover:animate__pulse">
             <Trophy className="w-6 h-6 text-white" />
           </div>
@@ -119,27 +119,27 @@ const Equipos = () => {
           return (
           <div
             key={equipo.nombre}
-            className={`relative overflow-hidden rounded-2xl p-6 border-2 transition-all duration-300 cursor-pointer hover:scale-105 hover:-translate-y-2 animate__animated animate__fadeInUp ${delayClass}`}
+            className={`relative overflow-hidden rounded-2xl p-4 sm:p-6 border-2 transition-all duration-300 cursor-pointer hover:scale-105 hover:-translate-y-2 animate__animated animate__fadeInUp ${delayClass}`}
             style={{
               background: `linear-gradient(135deg, ${getTeamColor(equipo.nombre)}60 0%, ${getTeamColor(equipo.nombre)}40 50%, ${getTeamColor(equipo.nombre)}50 100%)`,
               borderColor: `${getTeamColor(equipo.nombre)}`,
               boxShadow: `0 8px 32px ${getTeamColor(equipo.nombre)}60, 0 0 0 2px ${getTeamColor(equipo.nombre)}80`
             }}
           >
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6">
+              <div className="flex items-center space-x-3 sm:space-x-4">
                 <div className="flex items-center justify-center hover:animate__animated hover:animate__pulse">
                   <img
                     src={getTeamLogo(equipo.nombre)}
                     alt={`Logo ${equipo.nombre}`}
-                    className="w-20 h-20 object-contain hover:scale-110 transition-transform duration-300"
+                    className="w-16 h-16 sm:w-20 sm:h-20 object-contain hover:scale-110 transition-transform duration-300"
                     onError={(e) => {
                       e.target.style.display = 'none';
                       e.target.nextElementSibling.style.display = 'block';
                     }}
                   />
                   <Shield 
-                    className="w-12 h-12 text-white hidden" 
+                    className="w-10 h-10 sm:w-12 sm:h-12 text-white hidden" 
                     style={{ display: 'none' }}
                   />
                 </div>
@@ -147,7 +147,7 @@ const Equipos = () => {
                   <h2 className="text-2xl font-bold text-white hover:animate__animated hover:animate__pulse">
                     {equipo.nombre}
                   </h2>
-                  <p className="text-white/60 text-sm flex items-center space-x-2">
+                  <p className="text-white/60 text-xs sm:text-sm flex items-center space-x-2">
                     <Users className="w-4 h-4" />
                     <span>{equipo.pilotos.length} piloto{equipo.pilotos.length !== 1 ? 's' : ''}</span>
                   </p>
@@ -160,7 +160,7 @@ const Equipos = () => {
                   <p className="text-white/50 text-xs">Puntos</p>
                 </div>
                 <p 
-                  className="text-3xl font-bold hover:scale-110 transition-transform duration-300"
+                  className="text-2xl sm:text-3xl font-bold hover:scale-110 transition-transform duration-300"
                   style={{ color: getTeamColor(equipo.color) }}
                 >
                   {equipo.puntos}
@@ -168,7 +168,7 @@ const Equipos = () => {
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               <div className="flex items-center space-x-2 text-white/70 text-sm mb-2">
                 <TrendingUp className="w-4 h-4" />
                 <span className="font-semibold">Pilotos del equipo</span>
@@ -184,17 +184,17 @@ const Equipos = () => {
                   return (
                 <div
                   key={piloto.driver_number || idx}
-                  className={`glass-dark rounded-xl p-4 flex items-center justify-between cursor-pointer border border-white/10 hover:border-white/20 transition-all duration-300 hover:scale-105 hover:translate-x-1 animate__animated animate__fadeInLeft ${pilotoDelayClass}`}
+                  className={`glass-dark rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-3 cursor-pointer border border-white/10 hover:border-white/20 transition-all duration-300 hover:scale-105 hover:translate-x-1 animate__animated animate__fadeInLeft ${pilotoDelayClass}`}
                   style={{
                     background: `linear-gradient(90deg, ${getTeamColor(equipo.color)}15 0%, transparent 100%)`
                   }}
                 >
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2 sm:space-x-3">
                     <div className="relative">
                       {(() => {
                         const driverPhoto = getDriverPhoto(piloto);
                         return driverPhoto ? (
-                          <div className="w-10 h-10 rounded-lg overflow-hidden shadow-lg hover:scale-110 hover:rotate-3 transition-transform duration-300">
+                          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg overflow-hidden shadow-lg hover:scale-110 hover:rotate-3 transition-transform duration-300">
                             <img 
                               src={driverPhoto} 
                               alt={piloto.full_name}
@@ -208,7 +208,7 @@ const Equipos = () => {
                         ) : null;
                       })()}
                       <div 
-                        className="w-10 h-10 rounded-lg flex items-center justify-center hover:scale-110 hover:rotate-3 transition-transform duration-300"
+                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center hover:scale-110 hover:rotate-3 transition-transform duration-300"
                         style={{
                           background: `linear-gradient(135deg, ${getTeamColor(equipo.color)} 0%, ${getTeamColor(equipo.color)}80 100%)`,
                           boxShadow: `0 4px 10px ${getTeamColor(equipo.color)}40`,
@@ -234,7 +234,7 @@ const Equipos = () => {
                   <div className="text-right hover:scale-105 transition-transform duration-300">
                     <p className="text-white/50 text-xs">Pts</p>
                     <p 
-                      className="font-bold text-lg hover:scale-110 transition-transform duration-300"
+                      className="font-bold text-base sm:text-lg hover:scale-110 transition-transform duration-300"
                       style={{ color: getTeamColor(equipo.color) }}
                     >
                       {piloto.puntos}
@@ -264,7 +264,7 @@ const Equipos = () => {
         })}
       </div>
 
-      <div className="mt-10 glass-dark rounded-2xl p-6 text-center animate__animated animate__fadeIn animate__delay-1s">
+      <div className="mt-10 glass-dark rounded-2xl p-4 sm:p-6 text-center animate__animated animate__fadeIn animate__delay-1s">
         <p className="text-white/60 text-sm">
           <strong className="text-white">Datos actualizados:</strong> Los puntos mostrados son calculados en tiempo real 
           basados en los resultados de las carreras de la temporada {selectedYear}.
