@@ -5,11 +5,10 @@
 ![F1 Data Banner](https://img.shields.io/badge/F1-Data-E10600?style=for-the-badge&logo=formula1&logoColor=white)
 ![React](https://img.shields.io/badge/React-18.3-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![Vite](https://img.shields.io/badge/Vite-5.1-646CFF?style=for-the-badge&logo=vite&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
 ### 🏁 Aplicación web moderna para visualizar datos de Fórmula 1 en tiempo real
 
-[Ver Demo](#) • [Características](#-características) • [Tecnologías](#️-tecnologías) • [Capturas](#-capturas-de-pantalla)
+[Ver Demo](#) • [Características](#-características) • [Tecnologías](#️-tecnologías)
 
 </div>
 
@@ -88,33 +87,7 @@ Este proyecto personal fue desarrollado para demostrar habilidades en:
 
 ---
 
-## 🖼️ Capturas de Pantalla
-
-### 🏠 Página Principal
-*Vista hero con animaciones GSAP, podio interactivo y acceso rápido*
-
-```
-┌─────────────────────────────────────────────┐
-│                                             │
-│              F1 DATA                        │
-│         Temporada 2024 • En vivo            │
-│                                             │
-│  ┌────────┐  ┌────────┐  ┌────────┐       │
-│  │   🥈   │  │   🥇   │  │   🥉   │       │
-│  │ Piloto2│  │ Piloto1│  │ Piloto3│       │
-│  │ 280 pts│  │ 350 pts│  │ 240 pts│       │
-│  └────────┘  └────────┘  └────────┘       │
-│                                             │
-└─────────────────────────────────────────────┘
-```
-
-### 📊 Estadísticas
-*Gráficos interactivos y clasificaciones con efectos visuales*
-
-### 🗓️ Calendario
-*Vista de todas las carreras con información detallada*
-
----
+ 
 
 ## 🚀 Instalación y Uso
 
@@ -256,18 +229,7 @@ F1Data/
 
 ---
 
-## 📈 Roadmap Futuro
-
-- [ ] 🌍 Selector de idiomas (ES/EN)
-- [ ] 🌙 Toggle de tema (claro/oscuro)
-- [ ] 📱 App móvil con React Native
-- [ ] 🔔 Notificaciones de carreras en vivo
-- [ ] 📊 Más gráficos y comparativas
-- [ ] 🎮 Modo competición entre usuarios
-- [ ] 💬 Integración con redes sociales
-- [ ] 🎥 Videos y highlights de carreras
-
----
+ 
 
 ## 🤝 Contribuciones
 
@@ -281,20 +243,15 @@ Las contribuciones son bienvenidas. Si quieres mejorar el proyecto:
 
 ---
 
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia MIT. Ver el archivo [LICENSE](LICENSE) para más detalles.
-
----
+ 
 
 ## 👨‍💻 Autor
 
 **Tu Nombre**
 
-- 💼 LinkedIn: [tu-perfil](https://linkedin.com/in/tu-perfil)
-- 🐱 GitHub: [@tuusuario](https://github.com/tuusuario)
-- 🌐 Portfolio: [tuportfolio.com](https://tuportfolio.com)
-- 📧 Email: tuemail@ejemplo.com
+- 💼 LinkedIn: [Álvaro Langa](https://www.linkedin.com/in/%C3%A1lvaro-langa-dev/)
+- 🐱 GitHub: [@Laanga](https://github.com/Laanga)
+- 🌐 Portfolio: [alvarolangadev](alvarolangadev.vercel.app)
 
 ---
 
